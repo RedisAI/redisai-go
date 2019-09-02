@@ -179,7 +179,7 @@ func replyDataType(reply interface{}, err error) (dt DataType, outputErr error) 
 	return "", fmt.Errorf("redisai-go: unexpected type for replyDataType, got type %T", reply)
 }
 
-func processTensorReplyMeta(resp interface{}, err error) (data []interface{}, outErr error) {
+func ProcessTensorReplyMeta(resp interface{}, err error) (data []interface{}, outErr error) {
 	data, outErr = redis.Values(resp, err)
 	if len(data) < 2 {
 		err = fmt.Errorf("redisai.TensorGet: AI.TENSORGET returned response with incorrect sizing. expected at least '%d' got '%d'", 2, len(data))
@@ -190,7 +190,7 @@ func processTensorReplyMeta(resp interface{}, err error) (data []interface{}, ou
 	return data, outErr
 }
 
-func processTensorReplyBlob(resp []interface{}, err error) ([]interface{}, error) {
+func ProcessTensorReplyBlob(resp []interface{}, err error) ([]interface{}, error) {
 	if len(resp) < 3 {
 		err = fmt.Errorf("redisai.TensorGet: AI.TENSORGET returned response with incorrect sizing. expected '%d' got '%d'", 3, len(resp))
 		return resp, err
@@ -199,7 +199,7 @@ func processTensorReplyBlob(resp []interface{}, err error) ([]interface{}, error
 	return resp, err
 }
 
-func processTensorReplyValues(resp []interface{}, err error) ([]interface{}, error) {
+func ProcessTensorReplyValues(resp []interface{}, err error) ([]interface{}, error) {
 	if len(resp) < 3 {
 		err = fmt.Errorf("redisai.TensorGet: AI.TENSORGET returned response with incorrect sizing. expected '%d' got '%d'", 3, len(resp))
 		return resp, err

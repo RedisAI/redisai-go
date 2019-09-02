@@ -367,13 +367,13 @@ func Test_processTensorReplyBlob(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := processTensorReplyBlob(tt.args.resp, tt.args.err)
+			got, err := ProcessTensorReplyBlob(tt.args.resp, tt.args.err)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("processTensorReplyBlob() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ProcessTensorReplyBlob() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("processTensorReplyBlob() got = %v, want %v", got, tt.want)
+				t.Errorf("ProcessTensorReplyBlob() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -394,13 +394,13 @@ func Test_processTensorReplyMeta(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotData, err := processTensorReplyMeta(tt.args.resp, tt.args.err)
+			gotData, err := ProcessTensorReplyMeta(tt.args.resp, tt.args.err)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("processTensorReplyMeta() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ProcessTensorReplyMeta() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(gotData, tt.wantData) {
-				t.Errorf("processTensorReplyMeta() gotData = %v, want %v", gotData, tt.wantData)
+				t.Errorf("ProcessTensorReplyMeta() gotData = %v, want %v", gotData, tt.wantData)
 			}
 		})
 	}
@@ -421,13 +421,13 @@ func Test_processTensorReplyValues(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := processTensorReplyValues(tt.args.resp, tt.args.err)
+			got, err := ProcessTensorReplyValues(tt.args.resp, tt.args.err)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("processTensorReplyValues() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ProcessTensorReplyValues() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("processTensorReplyValues() got = %v, want %v", got, tt.want)
+				t.Errorf("ProcessTensorReplyValues() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

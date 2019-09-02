@@ -40,7 +40,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	foo2TensorMeta, err := client.Receive()
+	foo2TensorMeta, err := redisai.ProcessTensorReplyMeta(client.Receive())
 	if err != nil {
 		log.Fatal(err)
 	}

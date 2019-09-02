@@ -118,12 +118,12 @@ func (c *Client) TensorGet(name string, ct TensorContentType) (data []interface{
 		err = c.SendAndIncr("AI.TENSORGET", args)
 	} else {
 		resp, err := c.ActiveConn.Do("AI.TENSORGET", args...)
-		data, err = processTensorReplyMeta(resp, err)
+		data, err = ProcessTensorReplyMeta(resp, err)
 		switch ct {
 		case TensorContentTypeBlob:
-			data, err = processTensorReplyBlob(data, err)
+			data, err = ProcessTensorReplyBlob(data, err)
 		case TensorContentTypeValues:
-			data, err = processTensorReplyValues(data, err)
+			data, err = ProcessTensorReplyValues(data, err)
 		default:
 			err = fmt.Errorf("redisai.TensorGet: Unrecognized TensorContentType. Expected '%s' or '%s', got '%s'", TensorContentTypeBlob,TensorContentTypeValues, ct)
 		}
