@@ -906,7 +906,7 @@ func TestClient_ScriptSetFromFile(t *testing.T) {
 func TestClient_TensorGet(t *testing.T) {
 	valuesByteSlice := []byte{1, 2, 3, 4, 5}
 
-	valuesFloat32 := []float32{1.1}
+	valuesFloat32 := []float32{1.1, 2.2, 3.3, 4.4, 5.5}
 	valuesFloat64 := []float64{1.1}
 
 	valuesInt8 := []int8{1}
@@ -935,7 +935,7 @@ func TestClient_TensorGet(t *testing.T) {
 	simpleClient := Connect("", createPool())
 	simpleClient.TensorSet(keyByteSlice, TypeUint8, shpByteSlice, valuesByteSlice)
 
-	simpleClient.TensorSet(keyFloat32, TypeFloat32, shp, valuesFloat32)
+	simpleClient.TensorSet(keyFloat32, TypeFloat32, shpByteSlice, valuesFloat32)
 	simpleClient.TensorSet(keyFloat64, TypeFloat64, shp, valuesFloat64)
 
 	simpleClient.TensorSet(keyInt8, TypeInt8, shp, valuesInt8)
@@ -971,7 +971,7 @@ func TestClient_TensorGet(t *testing.T) {
 	}{
 		{keyByteSlice, fields{createPool(), false, 0, 0, nil}, args{keyByteSlice, TensorContentTypeBlob}, TypeUint8, shpByteSlice, valuesByteSlice, true, true, true, false},
 
-		{keyFloat32, fields{createPool(), false, 0, 0, nil}, args{keyFloat32, TensorContentTypeValues}, TypeFloat32, shp, valuesFloat32, true, true, true, false},
+		{keyFloat32, fields{createPool(), false, 0, 0, nil}, args{keyFloat32, TensorContentTypeValues}, TypeFloat32, shpByteSlice, valuesFloat32, true, true, true, false},
 		{keyFloat64, fields{createPool(), false, 0, 0, nil}, args{keyFloat64, TensorContentTypeValues}, TypeFloat64, shp, valuesFloat64, true, true, true, false},
 
 		{keyInt8, fields{createPool(), false, 0, 0, nil}, args{keyInt8, TensorContentTypeValues}, TypeInt8, shp, valuesInt8, true, true, true, false},
@@ -1156,7 +1156,7 @@ func TestClient_TensorGetMeta(t *testing.T) {
 
 func TestClient_TensorGetValues(t *testing.T) {
 
-	valuesFloat32 := []float32{1.1}
+	valuesFloat32 := []float32{1.1, 2.2, 3.3, 4.4, 5.5}
 	valuesFloat64 := []float64{1.1}
 
 	valuesInt8 := []int8{1}
@@ -1179,8 +1179,9 @@ func TestClient_TensorGetValues(t *testing.T) {
 	keyUnexistant := "test:TensorGetValues:Unexistant"
 
 	shp := []int{1}
+	shp2 := []int{1, 5}
 	simpleClient := Connect("", createPool())
-	simpleClient.TensorSet(keyFloat32, TypeFloat32, shp, valuesFloat32)
+	simpleClient.TensorSet(keyFloat32, TypeFloat32, shp2, valuesFloat32)
 	simpleClient.TensorSet(keyFloat64, TypeFloat64, shp, valuesFloat64)
 
 	simpleClient.TensorSet(keyInt8, TypeInt8, shp, valuesInt8)
@@ -1210,7 +1211,7 @@ func TestClient_TensorGetValues(t *testing.T) {
 		wantData  interface{}
 		wantErr   bool
 	}{
-		{keyFloat32, fields{createPool(), false, 0, 0, nil}, args{keyFloat32}, TypeFloat32, shp, valuesFloat32, false},
+		{keyFloat32, fields{createPool(), false, 0, 0, nil}, args{keyFloat32}, TypeFloat32, shp2, valuesFloat32, false},
 		{keyFloat64, fields{createPool(), false, 0, 0, nil}, args{keyFloat64}, TypeFloat64, shp, valuesFloat64, false},
 
 		{keyInt8, fields{createPool(), false, 0, 0, nil}, args{keyInt8}, TypeInt8, shp, valuesInt8, false},

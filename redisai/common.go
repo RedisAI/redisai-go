@@ -195,7 +195,12 @@ func ProcessTensorReplyBlob(resp []interface{}, err error) ([]interface{}, error
 		err = fmt.Errorf("redisai.TensorGet: AI.TENSORGET returned response with incorrect sizing. expected '%d' got '%d'", 3, len(resp))
 		return resp, err
 	}
-	resp[2], err = redis.Bytes(resp[2], err)
+	switch resp[0].(DataType) {
+	case TypeFloat:
+		resp[2], err = Float32sBytes(resp[2], resp[1].([]int), err)
+	case TypeUint8:
+		resp[2], err = redis.Bytes(resp[2], err)
+	}
 	return resp, err
 }
 
@@ -226,6 +231,34 @@ func ProcessTensorReplyValues(resp []interface{}, err error) ([]interface{}, err
 	//resp[2], err = redis.Values(resp[2], err)
 
 	return resp, err
+}
+
+// Float32s is a helper that converts an array command reply to a []float32.
+func Float32sBytes(reply interface{}, dimension []int, err error) ([]float32, error) {
+	totalResults := 0
+	if len(dimension) > 0 {
+		totalResults = dimension[0]
+	}
+
+	for i := 1; i < len(dimension); i++ {
+		totalResults *= dimension[i]
+	}
+	fmt.Errorf(fmt.Sprintf("Total results %d", totalResults))
+
+	var result = make( []float32 , totalResults )
+	tr, err := redis.Bytes(reply, err)
+	if err != nil {
+		return result, err
+	}
+	buf := bytes.NewReader(tr)
+	fmt.Errorf(fmt.Sprintf("Total results %d", totalResults))
+	for i := 0; i < totalResults; i++ {
+		err := binary.Read(buf, binary.LittleEndian, &result[i])
+		if err != nil {
+			return result, err
+		}
+	}
+	return result, err
 }
 
 // Float32s is a helper that converts an array command reply to a []float32.

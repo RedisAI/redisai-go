@@ -125,7 +125,7 @@ func (c *Client) TensorGet(name string, ct TensorContentType) (data []interface{
 		case TensorContentTypeValues:
 			data, err = ProcessTensorReplyValues(data, err)
 		default:
-			err = fmt.Errorf("redisai.TensorGet: Unrecognized TensorContentType. Expected '%s' or '%s', got '%s'", TensorContentTypeBlob,TensorContentTypeValues, ct)
+			err = fmt.Errorf("redisai.TensorGet: Unrecognized TensorContentType. Expected '%s' or '%s', got '%s'", TensorContentTypeBlob, TensorContentTypeValues, ct)
 		}
 	}
 	return
