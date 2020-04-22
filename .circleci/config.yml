@@ -53,3 +53,7 @@ workflows:
             branches:
               only:
                 - master
+    jobs:
+      - build-edge
+      - build-latest
+      - build-v090
