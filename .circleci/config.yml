@@ -3,7 +3,7 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  build: # test with redisearch:latest
+  build-edge: # test with redisai:edge
     docker:
       - image: circleci/golang:1.9
       - image: redisai/redisai:edge
@@ -15,8 +15,45 @@ jobs:
       - run: go test -v ./redisai -race -coverprofile=coverage.txt -covermode=atomic
       - run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}
 
+  build-latest: # test with redisai:latest
+    docker:
+      - image: circleci/golang:1.9
+      - image: redisai/redisai:latest
+
+    working_directory: /go/src/github.com/RedisAI/redisai-go
+    steps:
+      - checkout
+      - run: go get -v -t -d ./...
+      - run: go test -v ./redisai -race -coverprofile=coverage.txt -covermode=atomic
+
+  build-v090: # test with redisai:0.9.0
+    docker:
+      - image: circleci/golang:1.9
+      - image: redisai/redisai:0.9.0
+
+    working_directory: /go/src/github.com/RedisAI/redisai-go
+    steps:
+      - checkout
+      - run: go get -v -t -d ./...
+      - run: go test -v ./redisai -race -coverprofile=coverage.txt -covermode=atomic
+
+
 workflows:
   version: 2
   commit:
     jobs:
-      - build
+      - build-edge
+      - build-latest
+      - build-v090
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - build-edge
+      - build-latest
+      - build-v090
