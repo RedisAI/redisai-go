@@ -6,6 +6,8 @@
 [![GoDoc](https://godoc.org/github.com/RedisAI/redisai-go?status.svg)](https://godoc.org/github.com/RedisAI/redisai-go)
 
 # RedisAI Go Client
+[![Forum](https://img.shields.io/badge/Forum-RedisAI-blue)](https://forum.redislabs.com/c/modules/redisai)
+[![Gitter](https://badges.gitter.im/RedisLabs/RedisAI.svg)](https://gitter.im/RedisLabs/RedisAI?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Go client for [RedisAI](http://redisai.io), based on redigo.
 
