@@ -170,8 +170,8 @@ func (c *Client) TensorGetBlob(name string) (dt DataType, shape []int, data []by
 	return resp[0].(DataType), resp[1].([]int), resp[2].([]byte), err
 }
 
-func (c *Client) ModelGet(name string) (data []interface{}, err error) {
-	args := redis.Args{}.Add(name)
+func (c *Client) ModelGet(name string) (data map[string]string, err error) {
+	args := redis.Args{}.Add(name, "META", "BLOB")
 	c.ActiveConnNX()
 	if c.PipelineActive {
 		err = c.SendAndIncr("AI.MODELGET", args)
@@ -180,14 +180,7 @@ func (c *Client) ModelGet(name string) (data []interface{}, err error) {
 		if err != nil {
 			return nil, err
 		}
-		data, err = redis.Values(respInitial, err)
-		if len(data) != 3 {
-			err = fmt.Errorf("redisai.ModelGet: AI.MODELGET returned response with incorrect sizing. expected '%d' got '%d'", 3, len(data))
-			return nil, err
-		}
-		data[0] = BackendType(data[0].(string))
-		data[1] = DeviceType(data[1].(string))
-		data[2], err = redis.Bytes(data[2], nil)
+		data, err = redis.StringMap(respInitial, err)
 	}
 	return
 }
@@ -203,8 +196,8 @@ func (c *Client) ModelDel(name string) (err error) {
 	return
 }
 
-func (c *Client) ScriptGet(name string) (data []interface{}, err error) {
-	args := redis.Args{}.Add(name)
+func (c *Client) ScriptGet(name string) (data map[string]string, err error) {
+	args := redis.Args{}.Add(name, "META", "SOURCE")
 	c.ActiveConnNX()
 	if c.PipelineActive {
 		err = c.SendAndIncr("AI.SCRIPTGET", args)
@@ -213,13 +206,7 @@ func (c *Client) ScriptGet(name string) (data []interface{}, err error) {
 		if err != nil {
 			return nil, err
 		}
-		data, err = redis.Values(respInitial, err)
-		if len(data) != 2 {
-			err = fmt.Errorf("redisai.ScriptGet: AI.SCRIPTGET returned response with incorrect sizing. expected '%d' got '%d'", 2, len(data))
-			return nil, err
-		}
-		data[0] = DeviceType(data[0].(string))
-		data[1], err = redis.String(data[1], nil)
+		data, err = redis.StringMap(respInitial, err)
 	}
 	return
 }
@@ -255,6 +242,7 @@ func (c *Client) ModelSet(name string, backend BackendType, device DeviceType, d
 	if len(outputs) > 0 {
 		args = args.Add("OUTPUTS").AddFlat(outputs)
 	}
+	args = args.Add("BLOB")
 	args = args.Add(data)
 
 	c.ActiveConnNX()
@@ -289,7 +277,7 @@ func (c *Client) ModelRun(name string, inputs []string, outputs []string) (err e
 
 // ScriptSet sets a RedisAI script from a blob
 func (c *Client) ScriptSet(name string, device DeviceType, script_source string) (err error) {
-	args := redis.Args{}.Add(name, device, script_source)
+	args := redis.Args{}.Add(name, device, "SOURCE", script_source)
 	c.ActiveConnNX()
 	if c.PipelineActive {
 		err = c.SendAndIncr("AI.SCRIPTSET", args)

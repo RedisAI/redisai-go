@@ -189,18 +189,18 @@ func TestClient_ModelGet(t *testing.T) {
 				return
 			}
 			if tt.testBackend && !tt.fields.PipelineActive {
-				if !reflect.DeepEqual(gotData[0], tt.wantBackend) {
-					t.Errorf("ModelGet() gotBackend = %v, want %v. gotBackend Type %v, want Type %v.", gotData[0], tt.wantBackend, reflect.TypeOf(gotData[0]), reflect.TypeOf(tt.wantBackend))
+				if !reflect.DeepEqual(gotData["backend"], tt.wantBackend) {
+					t.Errorf("ModelGet() gotBackend = %v, want %v. gotBackend Type %v, want Type %v.", gotData["backend"], tt.wantBackend, reflect.TypeOf(gotData["backend"]), reflect.TypeOf(tt.wantBackend))
 				}
 			}
 			if tt.testDevice && !tt.fields.PipelineActive {
-				if !reflect.DeepEqual(gotData[1], tt.wantDevice) {
-					t.Errorf("ModelGet() gotDevice = %v, want %v. gotDevice Type %v, want Type %v.", gotData[1], tt.wantDevice, reflect.TypeOf(gotData[1]), reflect.TypeOf(tt.wantDevice))
+				if !reflect.DeepEqual(gotData["device"], tt.wantDevice) {
+					t.Errorf("ModelGet() gotDevice = %v, want %v. gotDevice Type %v, want Type %v.", gotData["device"], tt.wantDevice, reflect.TypeOf(gotData["device"]), reflect.TypeOf(tt.wantDevice))
 				}
 			}
 			if tt.testData && !tt.fields.PipelineActive {
-				if !reflect.DeepEqual(gotData[2], tt.wantData) {
-					t.Errorf("ModelGet() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[2], tt.wantData, reflect.TypeOf(gotData[2]), reflect.TypeOf(tt.wantData))
+				if !reflect.DeepEqual(gotData["blob"], tt.wantData) {
+					t.Errorf("ModelGet() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData["blob"], tt.wantData, reflect.TypeOf(gotData["blob"]), reflect.TypeOf(tt.wantData))
 				}
 			}
 
@@ -754,11 +754,11 @@ func TestClient_ScriptGet(t *testing.T) {
 				return
 			}
 			if tt.wantErr == false && !tt.fields.PipelineActive {
-				if !reflect.DeepEqual(gotData[0], tt.wantDeviceType) {
-					t.Errorf("ScriptGet() gotData = %v, want %v", gotData[0], tt.wantDeviceType)
+				if !reflect.DeepEqual(gotData["device"], tt.wantDeviceType) {
+					t.Errorf("ScriptGet() gotData = %v, want %v", gotData["device"], tt.wantDeviceType)
 				}
-				if !reflect.DeepEqual(gotData[1], tt.wantData) {
-					t.Errorf("ScriptGet() gotData = %v, want %v", gotData[1], tt.wantData)
+				if !reflect.DeepEqual(gotData["source"], tt.wantData) {
+					t.Errorf("ScriptGet() gotData = %v, want %v", gotData["source"], tt.wantData)
 				}
 			}
 
