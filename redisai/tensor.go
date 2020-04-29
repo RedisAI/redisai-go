@@ -22,11 +22,48 @@ type TensorInterface interface {
 	// Len returns the number of elements in the tensor.
 	Len() int
 
-	TypeString() string
-	SetTypeString(typestr string)
+	Dtype() reflect.Type
 
+	// Data returns the underlying tensor data
 	Data() interface{}
 	SetData(interface{})
+}
+
+func TensorGetTypeStrFromType(dtype reflect.Type) (typestr string, err error) {
+	switch dtype {
+	case reflect.TypeOf(([]uint8)(nil)):
+		typestr = TypeUint8
+	case reflect.TypeOf(([]byte)(nil)):
+		typestr = TypeUint8
+	case reflect.TypeOf(([]int)(nil)):
+		typestr = TypeInt32
+	case reflect.TypeOf(([]int8)(nil)):
+		typestr = TypeInt8
+	case reflect.TypeOf(([]int16)(nil)):
+		typestr = TypeInt16
+	case reflect.TypeOf(([]int32)(nil)):
+		typestr = TypeInt32
+	case reflect.TypeOf(([]int64)(nil)):
+		typestr = TypeInt64
+	case reflect.TypeOf(([]uint)(nil)):
+		typestr = TypeUint8
+	case reflect.TypeOf(([]uint16)(nil)):
+		typestr = TypeUint16
+	case reflect.TypeOf(([]float32)(nil)):
+		typestr = TypeFloat32
+	case reflect.TypeOf(([]float64)(nil)):
+		typestr = TypeFloat64
+	case reflect.TypeOf(([]uint32)(nil)):
+		fallthrough
+		// unsupported data type
+	case reflect.TypeOf(([]uint64)(nil)):
+		fallthrough
+		// unsupported data type
+
+	default:
+		err = fmt.Errorf("redisai Tensor does not support the following type %v", dtype)
+	}
+	return
 }
 
 func tensorSetFlatArgs(name string, dt string, dims []int, data interface{}) (redis.Args, error) {
@@ -74,13 +111,16 @@ func tensorSetFlatArgs(name string, dt string, dims []int, data interface{}) (re
 	return args, err
 }
 
-func tensorSetInterfaceArgs(keyName string, tensorInterface TensorInterface) (redis.Args, error) {
-	return tensorSetFlatArgs(keyName, tensorInterface.TypeString(), tensorInterface.Shape(), tensorInterface.Data())
+func tensorSetInterfaceArgs(keyName string, tensorInterface TensorInterface) (args redis.Args, err error) {
+	typestr, err := TensorGetTypeStrFromType(tensorInterface.Dtype())
+	if err != nil {
+		return
+	}
+	return tensorSetFlatArgs(keyName, typestr, tensorInterface.Shape(), tensorInterface.Data())
 }
 
 func tensorGetParseToInterface(reply interface{}, tensor TensorInterface) (err error) {
-	err, dtype, shape, data := ProcessTensorGetReply(reply, err)
-	tensor.SetTypeString(dtype)
+	err, _, shape, data := ProcessTensorGetReply(reply, err)
 	tensor.SetShape(shape)
 	tensor.SetData(data)
 	return
