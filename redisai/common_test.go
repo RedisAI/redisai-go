@@ -2,34 +2,9 @@ package redisai
 
 import (
 	"fmt"
-	"github.com/gomodule/redigo/redis"
 	"reflect"
 	"testing"
 )
-
-func TestModelRunArgs(t *testing.T) {
-	nameT1 := "test:ModelRunArgs:1:includeCommandName"
-	type args struct {
-		name               string
-		inputs             []string
-		outputs            []string
-		includeCommandName bool
-	}
-	tests := []struct {
-		name string
-		args args
-		want redis.Args
-	}{
-		{nameT1, args{nameT1, []string{}, []string{}, true}, redis.Args{"AI.MODELRUN", nameT1}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := ModelRunArgs(tt.args.name, tt.args.inputs, tt.args.outputs, tt.args.includeCommandName); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ModelRunArgs() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestTensorSetArgs_TensorContentType(t *testing.T) {
 
@@ -37,7 +12,7 @@ func TestTensorSetArgs_TensorContentType(t *testing.T) {
 
 	type args struct {
 		name               string
-		dt                 DataType
+		dt                 string
 		dims               []int
 		data               interface{}
 		includeCommandName bool
@@ -91,7 +66,7 @@ func Test_replyDataType(t *testing.T) {
 	var r10 interface{} = string("UINT16")
 	var r11 interface{} = nil
 
-	var err1 error = fmt.Errorf("")
+	var err1 = fmt.Errorf("")
 
 	type args struct {
 		reply interface{}
@@ -100,7 +75,7 @@ func Test_replyDataType(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantDt  DataType
+		wantDt  string
 		wantErr bool
 	}{
 		{"test:replyDataType:Error:1", args{r1, err1}, "", true},
@@ -228,37 +203,6 @@ func TestInt8s(t *testing.T) {
 	}
 }
 
-func TestTensorSetArgs(t *testing.T) {
-	type args struct {
-		name               string
-		dt                 DataType
-		dims               []int
-		data               interface{}
-		includeCommandName bool
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    redis.Args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := TensorSetArgs(tt.args.name, tt.args.dt, tt.args.dims, tt.args.data, tt.args.includeCommandName)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("TensorSetArgs() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TensorSetArgs() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestUint16s(t *testing.T) {
 
 	var r1 interface{} = nil
@@ -347,87 +291,6 @@ func Test_float32ToByte(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gotConverted, tt.wantConverted) {
 				t.Errorf("float32ToByte() gotConverted = %v, want %v", gotConverted, tt.wantConverted)
-			}
-		})
-	}
-}
-
-func Test_processTensorReplyBlob(t *testing.T) {
-	type args struct {
-		resp []interface{}
-		err  error
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []interface{}
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ProcessTensorReplyBlob(tt.args.resp, tt.args.err)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ProcessTensorReplyBlob() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ProcessTensorReplyBlob() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_processTensorReplyMeta(t *testing.T) {
-	type args struct {
-		resp interface{}
-		err  error
-	}
-	tests := []struct {
-		name     string
-		args     args
-		wantData []interface{}
-		wantErr  bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotData, err := ProcessTensorReplyMeta(tt.args.resp, tt.args.err)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ProcessTensorReplyMeta() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(gotData, tt.wantData) {
-				t.Errorf("ProcessTensorReplyMeta() gotData = %v, want %v", gotData, tt.wantData)
-			}
-		})
-	}
-}
-
-func Test_processTensorReplyValues(t *testing.T) {
-	type args struct {
-		resp []interface{}
-		err  error
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    []interface{}
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ProcessTensorReplyValues(tt.args.resp, tt.args.err)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ProcessTensorReplyValues() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ProcessTensorReplyValues() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

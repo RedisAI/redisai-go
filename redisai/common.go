@@ -11,78 +11,66 @@ import (
 )
 
 type aiclient interface {
-	LoadBackend(backend_identifier BackendType, location string) (err error)
-	TensorSet(name string, dt DataType, shape []int, data interface{}) (err error)
-	TensorGet(name string, ct TensorContentType) (data []interface{}, err error)
-	ModelSet(name string, backend BackendType, device DeviceType, data []byte, inputs []string, outputs []string) (err error)
+	LoadBackend(backend_identifier string, location string) (err error)
+	TensorSet(name string, dt string, shape []int, data interface{}) (err error)
+	TensorGet(name string, ct string) (data []interface{}, err error)
+	ModelSet(name string, backend string, device string, data []byte, inputs []string, outputs []string) (err error)
 	ModelGet(name string) (data []interface{}, err error)
 	ModelDel(name string) (err error)
 	ModelRun(name string, inputs []string, outputs []string) (err error)
-	ScriptSet(name string, device DeviceType, data string) (err error)
+	ScriptSet(name string, device string, data string) (err error)
 	ScriptGet(name string) (data []interface{}, err error)
 	ScriptDel(name string) (err error)
 	ScriptRun(name string, fn string, inputs []string, outputs []string) (err error)
 }
 
-// DeviceType is a device type
-type DeviceType string
-
-// BackendType is a backend type
-type BackendType string
-
-// TensorContentType is a tensor content type
-type TensorContentType string
-
-// DataType is a data type
-type DataType string
-
 const (
 	// BackendTF represents a TensorFlow backend
-	BackendTF = BackendType("TF")
+	BackendTF = string("TF")
 	// BackendTorch represents a Torch backend
-	BackendTorch = BackendType("TORCH")
+	BackendTorch = string("TORCH")
 	// BackendONNX represents an ONNX backend
-	BackendONNX = BackendType("ORT")
+	BackendONNX = string("ORT")
 
 	// DeviceCPU represents a CPU device
-	DeviceCPU = DeviceType("CPU")
+	DeviceCPU = string("CPU")
 	// DeviceGPU represents a GPU device
-	DeviceGPU = DeviceType("GPU")
+	DeviceGPU = string("GPU")
 
 	// TypeFloat represents a float type
-	TypeFloat = DataType("FLOAT")
+	TypeFloat = string("FLOAT")
 	// TypeDouble represents a double type
-	TypeDouble = DataType("DOUBLE")
+	TypeDouble = string("DOUBLE")
 	// TypeInt8 represents a int8 type
-	TypeInt8 = DataType("INT8")
+	TypeInt8 = string("INT8")
 	// TypeInt16 represents a int16 type
-	TypeInt16 = DataType("INT16")
+	TypeInt16 = string("INT16")
 	// TypeInt32 represents a int32 type
-	TypeInt32 = DataType("INT32")
+	TypeInt32 = string("INT32")
 	// TypeInt64 represents a int64 type
-	TypeInt64 = DataType("INT64")
+	TypeInt64 = string("INT64")
 	// TypeUint8 represents a uint8 type
-	TypeUint8 = DataType("UINT8")
+	TypeUint8 = string("UINT8")
 	// TypeUint16 represents a uint16 type
-	TypeUint16 = DataType("UINT16")
+	TypeUint16 = string("UINT16")
 	// TypeFloat32 is an alias for float
-	TypeFloat32 = DataType("FLOAT")
+	TypeFloat32 = string("FLOAT")
 	// TypeFloat64 is an alias for double
-	TypeFloat64 = DataType("DOUBLE")
+	TypeFloat64 = string("DOUBLE")
 
 	// TensorContentTypeBLOB is an alias for BLOB tensor content
-	TensorContentTypeBlob = TensorContentType("BLOB")
+	TensorContentTypeBlob = string("BLOB")
 
 	// TensorContentTypeBLOB is an alias for BLOB tensor content
-	TensorContentTypeValues = TensorContentType("VALUES")
+	TensorContentTypeValues = string("VALUES")
 
 	// TensorContentTypeBLOB is an alias for BLOB tensor content
-	TensorContentTypeMeta = TensorContentType("META")
+	TensorContentTypeMeta = string("META")
 )
 
 var ErrNil = errors.New("redisai-go: nil returned")
 
-func TensorSetArgs(name string, dt DataType, dims []int, data interface{}, includeCommandName bool) (redis.Args, error) {
+func TensorSetArgs(name string, dt string, dims []int, data interface{}, includeCommandName bool) (redis.Args, error) {
 	args := redis.Args{}
 	var err error = nil
 	if includeCommandName {
@@ -131,23 +119,10 @@ func TensorSetArgs(name string, dt DataType, dims []int, data interface{}, inclu
 	return args, err
 }
 
-func ModelRunArgs(name string, inputs []string, outputs []string, includeCommandName bool) redis.Args {
-	args := redis.Args{}
-	if includeCommandName {
-		args = args.Add("AI.MODELRUN")
-	}
-	args = args.Add(name)
-	if len(inputs) > 0 {
-		args = args.Add("INPUTS").AddFlat(inputs)
-	}
-	if len(outputs) > 0 {
-		args = args.Add("OUTPUTS").AddFlat(outputs)
-	}
-	return args
-}
+
 
 // DataType is a helper that converts a command reply to a DataType.
-func replyDataType(reply interface{}, err error) (dt DataType, outputErr error) {
+func replyDataType(reply interface{}, err error) (dt string, outputErr error) {
 	if err != nil {
 		return "", err
 	}
@@ -185,7 +160,7 @@ func ProcessTensorReplyMeta(resp interface{}, err error) (data []interface{}, ou
 		err = fmt.Errorf("redisai.TensorGet: AI.TENSORGET returned response with incorrect sizing. expected at least '%d' got '%d'", 2, len(data))
 		return data, err
 	}
-	data[0], outErr = replyDataType(data[0], err)
+	data[0], outErr = redis.String(data[0], err)
 	data[1], outErr = redis.Ints(data[1], err)
 	return data, outErr
 }
@@ -195,7 +170,7 @@ func ProcessTensorReplyBlob(resp []interface{}, err error) ([]interface{}, error
 		err = fmt.Errorf("redisai.TensorGet: AI.TENSORGET returned response with incorrect sizing. expected '%d' got '%d'", 3, len(resp))
 		return resp, err
 	}
-	switch resp[0].(DataType) {
+	switch resp[0].(string) {
 	case TypeFloat:
 		resp[2], err = Float32sBytes(resp[2], resp[1].([]int), err)
 	case TypeUint8:
@@ -209,7 +184,7 @@ func ProcessTensorReplyValues(resp []interface{}, err error) ([]interface{}, err
 		err = fmt.Errorf("redisai.TensorGet: AI.TENSORGET returned response with incorrect sizing. expected '%d' got '%d'", 3, len(resp))
 		return resp, err
 	}
-	switch resp[0].(DataType) {
+	switch resp[0].(string) {
 	case TypeFloat:
 		resp[2], err = Float32s(resp[2], err)
 	case TypeDouble:
@@ -245,7 +220,7 @@ func Float32sBytes(reply interface{}, dimension []int, err error) ([]float32, er
 	}
 	fmt.Errorf(fmt.Sprintf("Total results %d", totalResults))
 
-	var result = make( []float32 , totalResults )
+	var result = make([]float32, totalResults)
 	tr, err := redis.Bytes(reply, err)
 	if err != nil {
 		return result, err
