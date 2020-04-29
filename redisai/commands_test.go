@@ -91,7 +91,7 @@ func TestCommand_TensorSet(t *testing.T) {
 }
 
 func TestCommand_FullFromTensor(t *testing.T) {
-	tensor := implementations.NewAiTensorWithTypeShape(TypeFloat32, []int{1})
+	tensor := implementations.NewAiTensorWithShape([]int{1})
 	tensor.SetData([]float32{1.0})
 	client := createTestClient()
 	err := client.TensorSetFromTensor("tensor1", tensor)

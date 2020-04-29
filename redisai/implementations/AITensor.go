@@ -1,14 +1,18 @@
 package implementations
 
+import "reflect"
+
 // TensorInterface is an interface that represents the skeleton of a tensor ( n-dimensional array of numerical data )
 // needed to map it to a RedisAI Model with the proper operations
 type AiTensor struct {
-	typestr string
-
 	// the size - in each dimension - of the tensor.
 	shape []int
 
 	data interface{}
+}
+
+func (t *AiTensor) Dtype() reflect.Type {
+	return reflect.TypeOf(t.data)
 }
 
 func NewAiTensor() *AiTensor {
@@ -27,14 +31,6 @@ func (t *AiTensor) Len() int {
 	return result
 }
 
-func (t *AiTensor) TypeString() string {
-	return t.typestr
-}
-
-func (t *AiTensor) SetTypeString(typestr string) {
-	t.typestr = typestr
-}
-
 func (m *AiTensor) Shape() []int {
 	return m.shape
 }
@@ -43,12 +39,12 @@ func (m *AiTensor) SetShape(shape []int) {
 	m.shape = shape
 }
 
-func NewAiTensorWithTypeShape(typestr string, shape []int) *AiTensor {
-	return &AiTensor{typestr: typestr, shape: shape}
+func NewAiTensorWithShape(shape []int) *AiTensor {
+	return &AiTensor{shape: shape}
 }
 
 func NewAiTensorWithData(typestr string, shape []int, data interface{}) *AiTensor {
-	tensor := NewAiTensorWithTypeShape(typestr, shape)
+	tensor := NewAiTensorWithShape(shape)
 	tensor.SetData(data)
 	return tensor
 }
