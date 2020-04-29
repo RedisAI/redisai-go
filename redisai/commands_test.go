@@ -455,17 +455,17 @@ func TestCommand_ModelSet(t *testing.T) {
 }
 
 func TestCommand_ModelGet(t *testing.T) {
-	keyModel1 := "test:ModelGeToModel:1"
+	keyModel1 := "test:ModelGetToModel:1"
 	keyModelUnexistent1 := "test:ModelGetUnexistent:1"
 	data, err := ioutil.ReadFile("./../tests/test_data/creditcardfraud.pb")
 	if err != nil {
-		t.Errorf("Error preparing for ModelGeToModel(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for ModelGetToModel(), while issuing ModelSet. error = %v", err)
 		return
 	}
 	simpleClient := createTestClient()
 	err = simpleClient.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
 	if err != nil {
-		t.Errorf("Error preparing for ModelGeToModel(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for ModelGetToModel(), while issuing ModelSet. error = %v", err)
 		return
 	}
 	type args struct {
@@ -487,22 +487,22 @@ func TestCommand_ModelGet(t *testing.T) {
 			client := createTestClient()
 			gotData, err := client.ModelGet(tt.args.name)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ModelGeToModel() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ModelGetToModel() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[0], tt.wantBackend) {
-					t.Errorf("ModelGeToModel() gotBackend = %v, want %v. gotBackend Type %v, want Type %v.", gotData[0], tt.wantBackend, reflect.TypeOf(gotData[0]), reflect.TypeOf(tt.wantBackend))
+					t.Errorf("ModelGetToModel() gotBackend = %v, want %v. gotBackend Type %v, want Type %v.", gotData[0], tt.wantBackend, reflect.TypeOf(gotData[0]), reflect.TypeOf(tt.wantBackend))
 				}
 			}
 			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[1], tt.wantDevice) {
-					t.Errorf("ModelGeToModel() gotDevice = %v, want %v. gotDevice Type %v, want Type %v.", gotData[1], tt.wantDevice, reflect.TypeOf(gotData[1]), reflect.TypeOf(tt.wantDevice))
+					t.Errorf("ModelGetToModel() gotDevice = %v, want %v. gotDevice Type %v, want Type %v.", gotData[1], tt.wantDevice, reflect.TypeOf(gotData[1]), reflect.TypeOf(tt.wantDevice))
 				}
 			}
 			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[2], tt.wantData) {
-					t.Errorf("ModelGeToModel() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[2], tt.wantData, reflect.TypeOf(gotData[2]), reflect.TypeOf(tt.wantData))
+					t.Errorf("ModelGetToModel() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[2], tt.wantData, reflect.TypeOf(gotData[2]), reflect.TypeOf(tt.wantData))
 				}
 			}
 
@@ -616,7 +616,7 @@ func TestCommand_FullFromModelFlow(t *testing.T) {
 	assert.Nil(t, err)
 	err = client.ModelSetFromModel("financialNet", model)
 	model1 := implementations.NewEmptyModel()
-	err = client.ModelGeToModel("financialNet", model1)
+	err = client.ModelGetToModel("financialNet", model1)
 	assert.Equal(t, model.Device(), model1.Device())
 	assert.Nil(t, err)
 	model1.SetInputs([]string{"transaction", "reference"})

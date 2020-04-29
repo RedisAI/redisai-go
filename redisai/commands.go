@@ -104,7 +104,7 @@ func (c *Client) ModelGet(keyName string) (data []interface{}, err error) {
 	return
 }
 
-func (c *Client) ModelGeToModel(keyName string, modelIn ModelInterface) (err error) {
+func (c *Client) ModelGetToModel(keyName string, modelIn ModelInterface) (err error) {
 	args := modelGetFlatArgs(keyName)
 	var reply interface{}
 	reply, err = c.DoOrSend("AI.MODELGET", args, nil)
