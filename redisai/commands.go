@@ -115,6 +115,12 @@ func (c *Client) ModelGeToModel(keyName string, modelIn ModelInterface) (err err
 	return
 }
 
+func (c *Client) ModelDel(keyName string) (err error) {
+	args := modelDelFlatArgs(keyName)
+	_, err = c.DoOrSend("AI.MODELDEL", args, nil)
+	return
+}
+
 // ModelRun runs the model present in the keyName, with the input tensor names, and output tensor names
 func (c *Client) ModelRun(name string, inputTensorNames, outputTensorNames []string) (err error) {
 	args := modelRunFlatArgs(name, inputTensorNames, outputTensorNames)
@@ -122,9 +128,10 @@ func (c *Client) ModelRun(name string, inputTensorNames, outputTensorNames []str
 	return
 }
 
-func (c *Client) ModelDel(keyName string) (err error) {
-	args := modelDelFlatArgs(keyName)
-	_, err = c.DoOrSend("AI.MODELDEL", args, nil)
+// ScriptSet sets a RedisAI script from a blob
+func (c *Client) ScriptSet(name string, device string, script_source string) (err error) {
+	args := redis.Args{}.Add(name, device, "SOURCE", script_source)
+	_, err = c.DoOrSend("AI.SCRIPTSET", args, nil)
 	return
 }
 
@@ -144,22 +151,15 @@ func (c *Client) ScriptDel(name string) (err error) {
 	return
 }
 
-func (c *Client) LoadBackend(backend_identifier string, location string) (err error) {
-	args := redis.Args{}.Add("LOADBACKEND").Add(backend_identifier).Add(location)
-	_, err = c.DoOrSend("AI.CONFIG", args, nil)
-	return
-}
-
-// ScriptSet sets a RedisAI script from a blob
-func (c *Client) ScriptSet(name string, device string, script_source string) (err error) {
-	args := redis.Args{}.Add(name, device, "SOURCE", script_source)
-	_, err = c.DoOrSend("AI.SCRIPTSET", args, nil)
-	return
-}
-
 // ScriptRun runs a RedisAI script
 func (c *Client) ScriptRun(name string, fn string, inputs []string, outputs []string) (err error) {
 	args := scriptRunFlatArgs(name, fn, inputs, outputs)
 	_, err = c.DoOrSend("AI.SCRIPTRUN", args, nil)
+	return
+}
+
+func (c *Client) LoadBackend(backend_identifier string, location string) (err error) {
+	args := redis.Args{}.Add("LOADBACKEND").Add(backend_identifier).Add(location)
+	_, err = c.DoOrSend("AI.CONFIG", args, nil)
 	return
 }

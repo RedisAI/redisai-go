@@ -10,27 +10,81 @@ import (
 	"testing"
 )
 
-func TestCommand_LoadBackend(t *testing.T) {
-	keyTest1 := "test:LoadBackend:1:Unexistent"
-	keyTest2 := "test:LoadBackend:2:Unexistent:Pipelined"
+func TestCommand_TensorSet(t *testing.T) {
+
+	valuesFloat32 := []float32{1.1}
+	valuesFloat64 := []float64{1.1}
+
+	valuesInt8 := []int8{1}
+	valuesInt16 := []int16{1}
+	valuesInt32 := []int{1}
+	valuesInt64 := []int64{1}
+
+	valuesUint8 := []uint8{1}
+	valuesByte := []byte{1}
+
+	valuesUint16 := []uint16{1}
+	valuesUint32 := []uint32{1}
+	valuesUint64 := []uint64{1}
+
+	keyFloat32 := "test:TensorSet:TypeFloat32:1"
+	keyFloat64 := "test:TensorSet:TypeFloat64:1"
+
+	keyInt8 := "test:TensorSet:TypeInt8:1"
+	keyInt16 := "test:TensorSet:TypeInt16:1"
+	keyInt32 := "test:TensorSet:TypeInt32:1"
+	keyInt64 := "test:TensorSet:TypeInt64:1"
+
+	keyByte := "test:TensorSet:Type[]byte:1"
+	keyUint8 := "test:TensorSet:TypeUint8:1"
+	keyUint16 := "test:TensorSet:TypeUint16:1"
+	keyUint32 := "test:TensorSet:TypeUint32:ExpectError:1"
+	keyUint64 := "test:TensorSet:TypeUint64:ExpectError:1"
+
+	keyInt8Meta := "test:TensorSet:TypeInt8:Meta:1"
+	keyInt8MetaPipelined := "test:TensorSet:TypeInt8:Meta:2:Pipelined"
+
+	keyError1 := "test:TestCommand_TensorSet:1:FaultyDims"
+
+	shp := []int{1}
+
 	type args struct {
-		backend_identifier string
-		location           string
+		name string
+		dt   string
+		dims []int
+		data interface{}
 	}
+
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{keyTest1, args{BackendTF, "unexistant"}, true},
-		{keyTest2, args{BackendTF, "unexistant"}, true},
+		{keyFloat32, args{keyFloat32, TypeFloat, shp, valuesFloat32}, false},
+		{keyFloat64, args{keyFloat64, TypeFloat64, shp, valuesFloat64}, false},
+
+		{keyInt8, args{keyInt8, TypeInt8, shp, valuesInt8}, false},
+		{keyInt16, args{keyInt16, TypeInt16, shp, valuesInt16}, false},
+		{keyInt32, args{keyInt32, TypeInt32, shp, valuesInt32}, false},
+		{keyInt64, args{keyInt64, TypeInt64, shp, valuesInt64}, false},
+
+		{keyUint8, args{keyUint8, TypeUint8, shp, valuesUint8}, false},
+		{keyUint16, args{keyUint16, TypeUint16, shp, valuesUint16}, false},
+		{keyUint32, args{keyUint32, TypeUint8, shp, valuesUint32}, true},
+		{keyUint64, args{keyUint64, TypeUint8, shp, valuesUint64}, true},
+
+		{keyInt8Meta, args{keyInt8Meta, TypeUint8, shp, nil}, false},
+		{keyInt8MetaPipelined, args{keyInt8MetaPipelined, TypeUint8, shp, nil}, false},
+
+		{keyByte, args{keyByte, TypeUint8, shp, valuesByte}, false},
+
+		{keyError1, args{keyError1, TypeFloat, []int{1, 10}, []float32{1}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := createTestClient()
-			err := c.LoadBackend(tt.args.backend_identifier, tt.args.location)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("LoadBackend() error = %v, wantErr %v", err, tt.wantErr)
+			if err := c.TensorSet(tt.args.name, tt.args.dt, tt.args.dims, tt.args.data); (err != nil) != tt.wantErr {
+				t.Errorf("TensorSet() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -65,6 +119,8 @@ func TestCommand_FullFromTensor(t *testing.T) {
 	if diff := cmp.Diff(blob, tensor2BlobData.Data()); diff != "" {
 		t.Errorf("TestCommand_FullFromTensor() mismatch (-want +got):\n%s", diff)
 	}
+	err = client.TensorGetToTensor("tensorDontExist", TensorContentTypeValues, tensor2)
+	assert.NotNil(t, err)
 }
 
 func TestCommand_TensorGet(t *testing.T) {
@@ -95,7 +151,7 @@ func TestCommand_TensorGet(t *testing.T) {
 
 	shp := []int{1}
 	shpByteSlice := []int{1, 5}
-	simpleClient := Connect("", createPool())
+	simpleClient := createTestClient()
 	simpleClient.TensorSet(keyByteSlice, TypeUint8, shpByteSlice, valuesByteSlice)
 
 	simpleClient.TensorSet(keyFloat32, TypeFloat32, shpByteSlice, valuesFloat32)
@@ -354,86 +410,6 @@ func TestCommand_TensorGetValues(t *testing.T) {
 				if !reflect.DeepEqual(gotData, tt.wantData) {
 					t.Errorf("TensorGetValues() gotData = %v, want %v", gotData, tt.wantData)
 				}
-			}
-		})
-	}
-}
-
-func TestCommand_TensorSet(t *testing.T) {
-
-	valuesFloat32 := []float32{1.1}
-	valuesFloat64 := []float64{1.1}
-
-	valuesInt8 := []int8{1}
-	valuesInt16 := []int16{1}
-	valuesInt32 := []int{1}
-	valuesInt64 := []int64{1}
-
-	valuesUint8 := []uint8{1}
-	valuesByte := []byte{1}
-
-	valuesUint16 := []uint16{1}
-	valuesUint32 := []uint32{1}
-	valuesUint64 := []uint64{1}
-
-	keyFloat32 := "test:TensorSet:TypeFloat32:1"
-	keyFloat64 := "test:TensorSet:TypeFloat64:1"
-
-	keyInt8 := "test:TensorSet:TypeInt8:1"
-	keyInt16 := "test:TensorSet:TypeInt16:1"
-	keyInt32 := "test:TensorSet:TypeInt32:1"
-	keyInt64 := "test:TensorSet:TypeInt64:1"
-
-	keyByte := "test:TensorSet:Type[]byte:1"
-	keyUint8 := "test:TensorSet:TypeUint8:1"
-	keyUint16 := "test:TensorSet:TypeUint16:1"
-	keyUint32 := "test:TensorSet:TypeUint32:ExpectError:1"
-	keyUint64 := "test:TensorSet:TypeUint64:ExpectError:1"
-
-	keyInt8Meta := "test:TensorSet:TypeInt8:Meta:1"
-	keyInt8MetaPipelined := "test:TensorSet:TypeInt8:Meta:2:Pipelined"
-
-	keyError1 := "test:TestCommand_TensorSet:1:FaultyDims"
-
-	shp := []int{1}
-
-	type args struct {
-		name string
-		dt   string
-		dims []int
-		data interface{}
-	}
-
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{keyFloat32, args{keyFloat32, TypeFloat, shp, valuesFloat32}, false},
-		{keyFloat64, args{keyFloat64, TypeFloat64, shp, valuesFloat64}, false},
-
-		{keyInt8, args{keyInt8, TypeInt8, shp, valuesInt8}, false},
-		{keyInt16, args{keyInt16, TypeInt16, shp, valuesInt16}, false},
-		{keyInt32, args{keyInt32, TypeInt32, shp, valuesInt32}, false},
-		{keyInt64, args{keyInt64, TypeInt64, shp, valuesInt64}, false},
-
-		{keyUint8, args{keyUint8, TypeUint8, shp, valuesUint8}, false},
-		{keyUint16, args{keyUint16, TypeUint16, shp, valuesUint16}, false},
-		{keyUint32, args{keyUint32, TypeUint8, shp, valuesUint32}, true},
-		{keyUint64, args{keyUint64, TypeUint8, shp, valuesUint64}, true},
-
-		{keyInt8Meta, args{keyInt8Meta, TypeUint8, shp, nil}, false},
-		{keyInt8MetaPipelined, args{keyInt8MetaPipelined, TypeUint8, shp, nil}, false},
-
-		{keyByte, args{keyByte, TypeUint8, shp, valuesByte}, false},
-
-		{keyError1, args{keyError1, TypeFloat, []int{1, 10}, []float32{1}}, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := createTestClient()
-			if err := c.TensorSet(tt.args.name, tt.args.dt, tt.args.dims, tt.args.data); (err != nil) != tt.wantErr {
-				t.Errorf("TensorSet() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -819,6 +795,32 @@ func TestCommand_ScriptSet(t *testing.T) {
 			c := createTestClient()
 			if err := c.ScriptSet(tt.args.name, tt.args.device, tt.args.data); (err != nil) != tt.wantErr {
 				t.Errorf("ScriptSet() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestCommand_LoadBackend(t *testing.T) {
+	keyTest1 := "test:LoadBackend:1:Unexistent"
+	keyTest2 := "test:LoadBackend:2:Unexistent:Pipelined"
+	type args struct {
+		backend_identifier string
+		location           string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{keyTest1, args{BackendTF, "unexistant"}, true},
+		{keyTest2, args{BackendTF, "unexistant"}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := createTestClient()
+			err := c.LoadBackend(tt.args.backend_identifier, tt.args.location)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("LoadBackend() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
