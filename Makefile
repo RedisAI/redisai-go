@@ -17,5 +17,5 @@ test: get
 	$(GOTEST) -race -covermode=atomic ./...
 
 coverage: get
-	$(GOTEST) -race -coverprofile=coverage.txt -covermode=atomic ./...
+	$(GOTEST) -race -coverprofile=coverage.txt -covermode=atomic ./redisai
 
