@@ -40,11 +40,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	foo2TensorMeta, err := redisai.ProcessTensorReplyMeta(client.Receive())
+	err, dtype, shape, _ := redisai.ProcessTensorGetReply(client.Receive())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println(foo2TensorMeta)
-	// Output: [FLOAT [1 1]]
+	fmt.Println(dtype)
+	fmt.Println(shape)
+	// Output: FLOAT
+	//         [1 1]
 }
