@@ -14,8 +14,8 @@ get:
 	$(GOGET) ./...
 
 test: get
-	$(GOTEST) -race -covermode=atomic ./...
+	$(GOTEST) -race ./...
 
-coverage: get
-	$(GOTEST) -race -coverprofile=coverage.txt -covermode=atomic github.com/RedisAI/redisai-go/redisai
+coverage: get test
+	$(GOTEST) -race -coverprofile=coverage.txt ./redisai
 
