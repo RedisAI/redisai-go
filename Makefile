@@ -11,11 +11,11 @@ GOMOD=$(GOCMD) mod
 all: test coverage
 
 get:
-	$(GOGET) ./...
+	$(GOGET) -t -v ./...
 
 test: get
-	$(GOTEST) -race ./...
+	$(GOTEST) -v -race -covermode=atomic ./...
 
 coverage: get test
-	$(GOTEST) -race -coverprofile=coverage.txt ./redisai
+	$(GOTEST) -v -race -coverprofile=coverage.txt -covermode=atomic ./redisai
 

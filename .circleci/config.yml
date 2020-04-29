@@ -5,12 +5,13 @@ version: 2
 jobs:
   build-edge: # test with redisai:edge
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.13
       - image: redisai/redisai:edge
 
     working_directory: /go/src/github.com/RedisAI/redisai-go
     steps:
       - checkout
+      - run: make get
       - run: make coverage
       - run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}
 
