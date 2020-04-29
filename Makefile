@@ -14,8 +14,8 @@ get:
 	$(GOGET) -t -v ./...
 
 test: get
-	$(GOTEST) -v -race -covermode=atomic ./...
+	$(GOTEST) -race -covermode=atomic ./...
 
 coverage: get test
-	$(GOTEST) -v -race -coverprofile=coverage.txt -covermode=atomic ./redisai
+	$(GOTEST) -race -coverprofile=coverage.txt -covermode=atomic ./redisai
 

@@ -58,7 +58,6 @@ func NewEmptyModel() *AiModel {
 	return &AiModel{}
 }
 
-
 func (m *AiModel) SetBlobFromFile(path string) (err error) {
 	var data []byte
 	data, err = ioutil.ReadFile(path)

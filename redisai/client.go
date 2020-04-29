@@ -1,12 +1,60 @@
 package redisai
 
 import (
-	"fmt"
 	"github.com/gomodule/redigo/redis"
-	"io/ioutil"
 	"sync/atomic"
 	"time"
 )
+
+const (
+	// BackendTF represents a TensorFlow backend
+	BackendTF = string("TF")
+	// BackendTorch represents a Torch backend
+	BackendTorch = string("TORCH")
+	// BackendONNX represents an ONNX backend
+	BackendONNX = string("ORT")
+
+	// DeviceCPU represents a CPU device
+	DeviceCPU = string("CPU")
+	// DeviceGPU represents a GPU device
+	DeviceGPU = string("GPU")
+
+	// TypeFloat represents a float type
+	TypeFloat = string("FLOAT")
+	// TypeDouble represents a double type
+	TypeDouble = string("DOUBLE")
+	// TypeInt8 represents a int8 type
+	TypeInt8 = string("INT8")
+	// TypeInt16 represents a int16 type
+	TypeInt16 = string("INT16")
+	// TypeInt32 represents a int32 type
+	TypeInt32 = string("INT32")
+	// TypeInt64 represents a int64 type
+	TypeInt64 = string("INT64")
+	// TypeUint8 represents a uint8 type
+	TypeUint8 = string("UINT8")
+	// TypeUint16 represents a uint16 type
+	TypeUint16 = string("UINT16")
+	// TypeFloat32 is an alias for float
+	TypeFloat32 = string("FLOAT")
+	// TypeFloat64 is an alias for double
+	TypeFloat64 = string("DOUBLE")
+
+	// TensorContentTypeBLOB is an alias for BLOB tensor content
+	TensorContentTypeBlob = string("BLOB")
+
+	// TensorContentTypeBLOB is an alias for BLOB tensor content
+	TensorContentTypeValues = string("VALUES")
+
+	// TensorContentTypeBLOB is an alias for BLOB tensor content
+	TensorContentTypeMeta = string("META")
+)
+
+type AiClient interface {
+	// Close ensures that no connection is kept alive and prior to that we flush all db commands
+	Close() error
+	DoOrSend(string, redis.Args, error) (interface{}, error)
+}
 
 // Client is a RedisAI client
 type Client struct {
@@ -40,42 +88,6 @@ func Connect(url string, pool *redis.Pool) (c *Client) {
 
 	return c
 }
-
-// ModelSet sets a RedisAI model from a structure that implements the ModelInterface
-func (c *Client) ModelSet(keyName string, model ModelInterface) (err error) {
-	args := modelSetInterfaceArgs(keyName,model)
-	_, err = c.doOrSend("AI.MODELSET", args)
-	return
-}
-
-// ModelSet sets a RedisAI model from a blob
-func (c *Client) ModelSetFlatCmd(keyName, backend, device string, data []byte, inputs, outputs []string) (err error) {
-	args := modelSetFlatArgs(keyName, backend, device, inputs, outputs, data)
-	_, err = c.doOrSend("AI.MODELSET", args)
-	return
-}
-
-// ModelRun runs the model present in the keyName, with the input tensor names, and output tensor names
-func (c *Client) ModelRun(name string, inputTensorNames, outputTensorNames []string) (err error) {
-	args := modelRunFlatArgs(name, inputTensorNames, outputTensorNames)
-	_, err = c.doOrSend("AI.MODELRUN", args)
-	return
-}
-
-func (c *Client) ModelGet(keyName string, modelIn ModelInterface) (err error) {
-	args := modelGetFlatArgs(keyName)
-	var reply interface{}
-	reply, err = c.doOrSend("AI.MODELGET", args)
-	err = modelGetParseToInterface(reply, modelIn)
-	return
-}
-
-func (c *Client) ModelDel(keyName string) (err error) {
-	args := modelDelFlatArgs(keyName)
-	_, err = c.doOrSend("AI.MODELDEL", args)
-	return
-}
-
 
 // Close ensures that no connection is kept alive and prior to that we flush all db commands
 func (c *Client) Close() (err error) {
@@ -147,157 +159,11 @@ func (c *Client) pipeIncr(conn redis.Conn) (err error) {
 	return
 }
 
-func (c *Client) TensorGet(name string, ct string) (data []interface{}, err error) {
-	args := redis.Args{}.Add(name, ct)
-	c.ActiveConnNX()
-	if c.PipelineActive {
-		err = c.SendAndIncr("AI.TENSORGET", args)
-	} else {
-		resp, err := c.ActiveConn.Do("AI.TENSORGET", args...)
-		data, err = ProcessTensorReplyMeta(resp, err)
-		switch ct {
-		case TensorContentTypeBlob:
-			data, err = ProcessTensorReplyBlob(data, err)
-		case TensorContentTypeValues:
-			data, err = ProcessTensorReplyValues(data, err)
-		default:
-			err = fmt.Errorf("redisai.TensorGet: Unrecognized TensorContentType. Expected '%s' or '%s', got '%s'", TensorContentTypeBlob, TensorContentTypeValues, ct)
-		}
-	}
-	return
-}
-
-// TensorGetValues gets a tensor's values
-func (c *Client) TensorGetValues(name string) (dt string, shape []int, data interface{}, err error) {
-	resp, err := c.TensorGet(name, TensorContentTypeValues)
+func (c *Client) DoOrSend(cmdName string, args redis.Args, errIn error) (reply interface{}, err error) {
+	err = errIn
 	if err != nil {
 		return
 	}
-	if len(resp) != 3 {
-		err = fmt.Errorf("redisai.ModelGet: AI.TENSORGET returned response with incorrect sizing. expected '%d' got '%d'", 3, len(resp))
-		return dt, shape, data, err
-	}
-	return resp[0].(string), resp[1].([]int), resp[2], err
-}
-
-// TensorGetValues gets a tensor's values
-func (c *Client) TensorGetMeta(name string) (dt string, shape []int, err error) {
-	resp, err := c.TensorGet(name, TensorContentTypeMeta)
-	if err != nil {
-		return
-	}
-	if len(resp) != 2 {
-		err = fmt.Errorf("redisai.ModelGet: AI.TENSORGET returned response with incorrect sizing. expected '%d' got '%d'", 2, len(resp))
-		return dt, shape, err
-	}
-	return resp[0].(string), resp[1].([]int), err
-}
-
-// TensorGetValues gets a tensor's values
-func (c *Client) TensorGetBlob(name string) (dt string, shape []int, data []byte, err error) {
-	resp, err := c.TensorGet(name, TensorContentTypeBlob)
-	if err != nil {
-		return
-	}
-	if len(resp) != 3 {
-		err = fmt.Errorf("redisai.ModelGet: AI.TENSORGET returned response with incorrect sizing. expected '%d' got '%d'", 3, len(resp))
-		return dt, shape, data, err
-	}
-	return resp[0].(string), resp[1].([]int), resp[2].([]byte), err
-}
-
-func (c *Client) ScriptGet(name string) (data map[string]string, err error) {
-	args := redis.Args{}.Add(name, "META", "SOURCE")
-	c.ActiveConnNX()
-	if c.PipelineActive {
-		err = c.SendAndIncr("AI.SCRIPTGET", args)
-	} else {
-		respInitial, err := c.ActiveConn.Do("AI.SCRIPTGET", args...)
-		if err != nil {
-			return nil, err
-		}
-		data, err = redis.StringMap(respInitial, err)
-	}
-	return
-}
-
-func (c *Client) ScriptDel(name string) (err error) {
-	args := redis.Args{}.Add(name)
-	c.ActiveConnNX()
-	if c.PipelineActive {
-		err = c.SendAndIncr("AI.SCRIPTDEL", args)
-	} else {
-		_, err = redis.String(c.ActiveConn.Do("AI.SCRIPTDEL", args...))
-	}
-	return
-}
-
-func (c *Client) LoadBackend(backend_identifier string, location string) (err error) {
-	args := redis.Args{}.Add("LOADBACKEND").Add(backend_identifier).Add(location)
-	c.ActiveConnNX()
-	if c.PipelineActive {
-		err = c.SendAndIncr("AI.CONFIG", args)
-	} else {
-		_, err = redis.String(c.ActiveConn.Do("AI.CONFIG", args...))
-	}
-	return
-}
-
-// ScriptSet sets a RedisAI script from a blob
-func (c *Client) ScriptSet(name string, device string, script_source string) (err error) {
-	args := redis.Args{}.Add(name, device, "SOURCE", script_source)
-	c.ActiveConnNX()
-	if c.PipelineActive {
-		err = c.SendAndIncr("AI.SCRIPTSET", args)
-	} else {
-		_, err = redis.String(c.ActiveConn.Do("AI.SCRIPTSET", args...))
-	}
-	return
-}
-
-// ScriptSetFromFile sets a RedisAI script from a file
-func (c *Client) ScriptSetFromFile(name string, device string, path string) error {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	return c.ScriptSet(name, device, string(data))
-}
-
-// ScriptRun runs a RedisAI script
-func (c *Client) ScriptRun(name string, fn string, inputs []string, outputs []string) (err error) {
-	args := redis.Args{}.Add(name, fn)
-	if len(inputs) > 0 {
-		args = args.Add("INPUTS").AddFlat(inputs)
-	}
-	if len(outputs) > 0 {
-		args = args.Add("OUTPUTS").AddFlat(outputs)
-	}
-	c.ActiveConnNX()
-	if c.PipelineActive {
-		err = c.SendAndIncr("AI.SCRIPTRUN", args)
-	} else {
-		_, err = redis.String(c.ActiveConn.Do("AI.SCRIPTRUN", args...))
-	}
-	return
-}
-
-// TensorSet sets a tensor
-func (c *Client) TensorSet(name string, dt string, dims []int, data interface{}) (err error) {
-	args, err := TensorSetArgs(name, dt, dims, data, false)
-	if err != nil {
-		return err
-	}
-	c.ActiveConnNX()
-	if c.PipelineActive {
-		err = c.SendAndIncr("AI.TENSORSET", args)
-	} else {
-		_, err = redis.String(c.ActiveConn.Do("AI.TENSORSET", args...))
-	}
-	return
-}
-
-func (c *Client) doOrSend(cmdName string, args redis.Args) (reply interface{}, err error) {
 	c.ActiveConnNX()
 	if c.PipelineActive {
 		err = c.SendAndIncr(cmdName, args)

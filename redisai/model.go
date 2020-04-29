@@ -2,7 +2,6 @@ package redisai
 
 import (
 	"github.com/gomodule/redigo/redis"
-	//"io/ioutil"
 )
 
 // ModelInterface is an interface that represents the skeleton of a model
@@ -18,17 +17,6 @@ type ModelInterface interface {
 	SetDevice(device string)
 	Backend() string
 	SetBackend(backend string)
-}
-
-// ModelInterface is an interface that represents the skeleton of a model
-// needed to map it to a RedisAI Model with the proper operations
-type TensorInterface interface {
-	Shape() []int32
-	SetShape(shape []int32)
-	TypeString() string
-	SetTypeString(typestr string)
-	Blob() []byte
-	SetBlob(blob []byte)
 }
 
 func modelSetFlatArgs(keyName, backend, device string, inputs, outputs []string, blob []byte) redis.Args {
@@ -60,16 +48,23 @@ func modelRunFlatArgs(name string, inputTensorNames, outputTensorNames []string)
 	return args
 }
 
-func modelRunInterfaceArgs(modelkeyName string, inputTensorNames, outputTensorNames []string) redis.Args {
-	return modelRunFlatArgs(modelkeyName, inputTensorNames, outputTensorNames)
-}
-
 func modelGetParseToInterface(reply interface{}, model ModelInterface) (err error) {
-	var replySlice []interface{}
 	var backend string
 	var device string
-	var key string
 	var blob []byte
+	err, backend, device, blob = modelGetParseReply(reply)
+	if err != nil {
+		return err
+	}
+	model.SetBackend(backend)
+	model.SetDevice(device)
+	model.SetBlob(blob)
+	return
+}
+
+func modelGetParseReply(reply interface{}) (err error, backend string, device string, blob []byte) {
+	var replySlice []interface{}
+	var key string
 	replySlice, err = redis.Values(reply, err)
 	if err != nil {
 		return
@@ -80,30 +75,23 @@ func modelGetParseToInterface(reply interface{}, model ModelInterface) (err erro
 			return
 		}
 		switch key {
-
 		case "backend":
 			backend, err = redis.String(replySlice[pos+1], err)
 			if err != nil {
 				return
 			}
-			model.SetBackend(backend)
-
 		case "device":
 			device, err = redis.String(replySlice[pos+1], err)
 			if err != nil {
 				return
 			}
-			model.SetDevice(device)
-
 		case "blob":
 			blob, err = redis.Bytes(replySlice[pos+1], err)
 			if err != nil {
 				return
 			}
-			model.SetBlob(blob)
 		}
 	}
-
 	return
 }
 
@@ -111,7 +99,6 @@ func modelGetFlatArgs(name string) redis.Args {
 	args := redis.Args{}.Add(name, "META", "BLOB")
 	return args
 }
-
 
 func modelDelFlatArgs(name string) redis.Args {
 	args := redis.Args{}.Add(name)

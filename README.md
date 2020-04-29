@@ -17,6 +17,27 @@ Go client for [RedisAI](http://redisai.io), based on redigo.
 go get github.com/RedisAI/redisai-go/redisai
 ```
 
+# Supported RedisAI Commands
+
+| Command | Recommended API and godoc  |
+| :---          |  ----: |
+AI.TENSORSET | [TensorSet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.TensorSet) and [TensorSetFromTensor](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.TensorSetFromTensor)
+AI.TENSORGET | [TensorGet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.TensorGet) and [TensorGetToTensor](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.TensorGetToTensor)
+AI.MODELSET | [ModelSet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ModelSet) and [ModelSetFromModel](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ModelSetFromModel)
+AI.MODELGET | [ModelGet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ModelGet) and [ModelGetToModel](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ModelGetToModel)
+AI.MODELDEL | [ModelDel](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ModelDel)
+AI.MODELRUN | [ModelRun](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ModelRun)
+AI._MODELSCAN |  
+AI.SCRIPTSET | [ScriptSet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptSet)
+AI.SCRIPTGET | [ScriptSet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptGet)
+AI.SCRIPTDEL | [ScriptSet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptRun)
+AI.SCRIPTRUN | [ScriptSet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptDel)
+AI._SCRIPTSCAN |  
+AI.DAGRUN |  
+AI.INFO |  
+AI.CONFIG * | [LoadBackend](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.LoadBackend)
+
+
 # Usage Examples
 See the [examples](./examples) folder for further feature samples:
 
