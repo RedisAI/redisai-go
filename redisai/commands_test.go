@@ -825,3 +825,46 @@ func TestCommand_LoadBackend(t *testing.T) {
 		})
 	}
 }
+
+func TestCommand_Info(t *testing.T) {
+	c := createTestClient()
+	keyModel1 := "test:Info:1"
+	data, err := ioutil.ReadFile("./../tests/test_data/graph.pb")
+	if err != nil {
+		t.Errorf("Error preparing for Info(), while issuing ModelSet. error = %v", err)
+		return
+	}
+	err = c.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"a", "b"}, []string{"mul"})
+	if err != nil {
+		t.Errorf("Error preparing for Info(), while issuing ModelSet. error = %v", err)
+		return
+	}
+
+	// first inited info
+	info, err := c.Info(keyModel1)
+	assert.NotNil(t, info)
+	assert.Equal(t, keyModel1, info["key"])
+	assert.Equal(t, DeviceCPU, info["device"])
+	assert.Equal(t, BackendTF, info["backend"])
+	assert.Equal(t, "0", info["calls"])
+
+	err = c.TensorSet("a", TypeFloat32, []int{1}, []float32{1.1})
+	assert.Nil(t, err)
+	err = c.TensorSet("b", TypeFloat32, []int{1}, []float32{4.4})
+	assert.Nil(t, err)
+	err = c.ModelRun(keyModel1, []string{"a", "b"}, []string{"mul"})
+	assert.Nil(t, err)
+	info, err = c.Info(keyModel1)
+	// one model runs
+	assert.Equal(t, "1", info["calls"])
+
+	// reset
+	ret, err := c.ResetStat(keyModel1)
+	assert.Equal(t, "OK", ret)
+	info, err = c.Info(keyModel1)
+	assert.Equal(t, "0", info["calls"])
+
+	// not exits
+	ret, err = c.ResetStat("notExits")
+	assert.NotNil(t, err)
+}

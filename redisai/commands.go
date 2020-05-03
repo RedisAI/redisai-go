@@ -1,7 +1,10 @@
 package redisai
 
 import (
+	"errors"
+	"fmt"
 	"github.com/gomodule/redigo/redis"
+	"strconv"
 )
 
 // TensorSet sets a tensor
@@ -162,4 +165,36 @@ func (c *Client) LoadBackend(backend_identifier string, location string) (err er
 	args := redis.Args{}.Add("LOADBACKEND").Add(backend_identifier).Add(location)
 	_, err = c.DoOrSend("AI.CONFIG", args, nil)
 	return
+}
+
+// Returns information about the execution a model or a script.
+func (c *Client) Info(key string) (map[string]string, error) {
+	reply, err := c.DoOrSend("AI.INFO", redis.Args{key}, nil)
+	values, err := redis.Values(reply, err)
+	if err != nil {
+		return nil, err
+	}
+	if len(values)%2 != 0 {
+		return nil, errors.New("expects even number of values result")
+	}
+
+	m := make(map[string]string, len(values)/2)
+	for i := 0; i < len(values); i += 2 {
+		k := string(values[i].([]byte))
+		switch v := values[i+1].(type) {
+		case []byte:
+			m[k] = string(values[i+1].([]byte))
+			break
+		case int64:
+			m[k] = strconv.FormatInt(values[i+1].(int64), 10)
+		default:
+			return nil, fmt.Errorf("unexpected element type for (Ints,String), got type %T", v)
+		}
+	}
+	return m, nil
+}
+
+// Resets all statistics associated with the key
+func (c *Client) ResetStat(key string) (string, error) {
+	return redis.String(c.DoOrSend("AI.INFO", redis.Args{key, "RESETSTAT"}, nil))
 }
