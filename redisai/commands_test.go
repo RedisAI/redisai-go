@@ -975,7 +975,7 @@ func TestCommand_DagRunRO(t *testing.T) {
 					assert.True(t, len(blobs) > 0)
 					continue
 				}
-				t.Errorf("DagRun() error unsupported result")
+				t.Errorf("DagRunRO() error unsupported result")
 			}
 		})
 	}
