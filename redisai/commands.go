@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gomodule/redigo/redis"
 	"strconv"
+	"strings"
 )
 
 // TensorSet sets a tensor
@@ -197,4 +198,38 @@ func (c *Client) Info(key string) (map[string]string, error) {
 // Resets all statistics associated with the key
 func (c *Client) ResetStat(key string) (string, error) {
 	return redis.String(c.DoOrSend("AI.INFO", redis.Args{key, "RESETSTAT"}, nil))
+}
+
+// Direct acyclic graph of operations to run within RedisAI
+func (c *Client) DagRun(loadKeys []string, persistKeys []string, commands []string) ([]interface{}, error) {
+	args := AddDagRunArgs(loadKeys, persistKeys, commands)
+	reply, err := c.DoOrSend("AI.DAGRUN", args, nil)
+	return redis.Values(reply, err)
+}
+
+// The command is a read-only variant of AI.DAGRUN
+func (c *Client) DagRunRO(loadKeys []string, commands []string) ([]interface{}, error) {
+	args := AddDagRunArgs(loadKeys, nil, commands)
+	reply, err := c.DoOrSend("AI.DAGRUN_RO", args, nil)
+	return redis.Values(reply, err)
+}
+
+// AddDagRunArgs for AI.DAGRUN and DAGRUN_RO commands.
+func AddDagRunArgs(loadKeys []string, persistKeys []string, commands []string) redis.Args {
+	args := redis.Args{}
+	if loadKeys != nil {
+		args = args.Add("LOAD", len(loadKeys)).AddFlat(loadKeys)
+	}
+
+	if persistKeys != nil {
+		args = args.Add("PERSIST", len(persistKeys)).AddFlat(persistKeys)
+	}
+
+	if commands != nil {
+		for _, command := range commands {
+			args = args.Add("|>")
+			args = args.AddFlat(strings.Fields(command))
+		}
+	}
+	return args
 }

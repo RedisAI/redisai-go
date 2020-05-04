@@ -868,3 +868,115 @@ func TestCommand_Info(t *testing.T) {
 	ret, err = c.ResetStat("notExits")
 	assert.NotNil(t, err)
 }
+
+func TestCommand_DagRun(t *testing.T) {
+	c := createTestClient()
+	keyModel1 := "test:DagRun:mymodel:1"
+	data, err := ioutil.ReadFile("./../tests/test_data/graph.pb")
+	if err != nil {
+		t.Errorf("Error preparing for Info(), while issuing ModelSet. error = %v", err)
+		return
+	}
+	err = c.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"a", "b"}, []string{"mul"})
+	err = c.TensorSet("persisted_tensor_1", TypeFloat32, []int{1, 2}, []float32{5, 10})
+	assert.Nil(t, err)
+
+	type args struct {
+		loadKeys    []string
+		persistKeys []string
+		commands    []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"t_wrong_number", args{[]string{"notnumber"}, nil, []string{"AI.TENSORSET tensor1 FLOAT 1 2 VALUES 5 10"}}, true},
+		{"t_load", args{[]string{"persisted_tensor_1"}, []string{"tensor1"}, []string{"AI.TENSORSET tensor1 FLOAT 1 2 VALUES 5 10"}}, false},
+		{"t_load_err", args{[]string{"not_exits_tensor"}, []string{"tensor1"}, []string{"AI.TENSORSET tensor1 FLOAT 1 2 VALUES 5 10"}}, true},
+		{"t_negative", args{nil, nil, []string{""}}, true},
+		{"t1", args{nil, nil, []string{"AI.TENSORSET a FLOAT 1 VALUES 1.1"}}, false},
+		{"t_blob", args{nil, nil, []string{"AI.TENSORSET a FLOAT 1 VALUES 1.1", "AI.TENSORSET b FLOAT 1 VALUES 4.4", "AI.MODELRUN test:DagRun:mymodel:1 INPUTS a b OUTPUTS mul", "AI.DONTEXIST  mul BLOB"}}, false},
+		{"t_values", args{nil, nil, []string{"AI.TENSORSET mytensor FLOAT 1 2 VALUES 5 10", "AI.TENSORGET mytensor VALUES"}}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := createTestClient()
+			results, err := c.DagRun(tt.args.loadKeys, tt.args.persistKeys, tt.args.commands)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DagRun() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			for _, result := range results {
+				ret, ok := result.(string)
+				if ok {
+					assert.Equal(t, "OK", ret)
+					continue
+				}
+				values, ok := result.([]interface{})
+				if ok {
+					vs, _ := redis.Strings(values, nil)
+					assert.True(t, len(vs) > 0)
+					continue
+				}
+				blobs, ok := result.([]byte)
+				if ok {
+					assert.True(t, len(blobs) > 0)
+					continue
+				}
+				t.Errorf("DagRun() error unsupported result")
+			}
+		})
+	}
+}
+
+func TestCommand_DagRunRO(t *testing.T) {
+	c := createTestClient()
+	err := c.TensorSet("persisted_tensor", TypeFloat32, []int{1, 2}, []float32{5, 10})
+	assert.Nil(t, err)
+	type args struct {
+		loadKeys []string
+		commands []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"t_1", args{[]string{"persisted_tensor"}, []string{"AI.TENSORGET persisted_tensor VALUES"}}, false},
+		{"t_2", args{nil, []string{"AI.TENSORSET tensor1 FLOAT 1 2 VALUES 5 10", "AI.TENSORSET tensor2 FLOAT 1 2 VALUES 5 10"}}, false},
+		{"t_err1", args{[]string{"notnumber"}, []string{"AI.TENSORSET tensor1 FLOAT 1 2 VALUES 5 10"}}, true},
+		{"t_err2", args{nil, nil}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := createTestClient()
+			results, err := c.DagRunRO(tt.args.loadKeys, tt.args.commands)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DagRunRO() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			for _, result := range results {
+				ret, ok := result.(string)
+				if ok {
+					assert.Equal(t, "OK", ret)
+					continue
+				}
+				values, ok := result.([]interface{})
+				if ok {
+					vs, _ := redis.Strings(values, nil)
+					assert.True(t, len(vs) > 0)
+					continue
+				}
+				blobs, ok := result.([]byte)
+				if ok {
+					assert.True(t, len(blobs) > 0)
+					continue
+				}
+				t.Errorf("DagRun() error unsupported result")
+			}
+		})
+	}
+}
