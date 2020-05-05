@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gomodule/redigo/redis"
 	"strconv"
-	"strings"
 )
 
 // TensorSet sets a tensor
@@ -201,21 +200,29 @@ func (c *Client) ResetStat(key string) (string, error) {
 }
 
 // Direct acyclic graph of operations to run within RedisAI
-func (c *Client) DagRun(loadKeys []string, persistKeys []string, commands []string) ([]interface{}, error) {
-	args := AddDagRunArgs(loadKeys, persistKeys, commands)
+func (c *Client) DagRun(loadKeys []string, persistKeys []string, dagCommandInterface DagCommandInterface) ([]interface{}, error) {
+	commandArgs, err := dagCommandInterface.FlatArgs()
+	if err != nil {
+		return nil, err
+	}
+	args := AddDagRunArgs(loadKeys, persistKeys, commandArgs)
 	reply, err := c.DoOrSend("AI.DAGRUN", args, nil)
-	return redis.Values(reply, err)
+	return dagCommandInterface.ParseReply(reply, err)
 }
 
 // The command is a read-only variant of AI.DAGRUN
-func (c *Client) DagRunRO(loadKeys []string, commands []string) ([]interface{}, error) {
-	args := AddDagRunArgs(loadKeys, nil, commands)
+func (c *Client) DagRunRO(loadKeys []string, dagCommandInterface DagCommandInterface) ([]interface{}, error) {
+	commandArgs, err := dagCommandInterface.FlatArgs()
+	if err != nil {
+		return nil, err
+	}
+	args := AddDagRunArgs(loadKeys, nil, commandArgs)
 	reply, err := c.DoOrSend("AI.DAGRUN_RO", args, nil)
-	return redis.Values(reply, err)
+	return dagCommandInterface.ParseReply(reply, err)
 }
 
 // AddDagRunArgs for AI.DAGRUN and DAGRUN_RO commands.
-func AddDagRunArgs(loadKeys []string, persistKeys []string, commands []string) redis.Args {
+func AddDagRunArgs(loadKeys []string, persistKeys []string, commandArgs redis.Args) redis.Args {
 	args := redis.Args{}
 	if loadKeys != nil {
 		args = args.Add("LOAD", len(loadKeys)).AddFlat(loadKeys)
@@ -225,11 +232,8 @@ func AddDagRunArgs(loadKeys []string, persistKeys []string, commands []string) r
 		args = args.Add("PERSIST", len(persistKeys)).AddFlat(persistKeys)
 	}
 
-	if commands != nil {
-		for _, command := range commands {
-			args = args.Add("|>")
-			args = args.AddFlat(strings.Fields(command))
-		}
+	if commandArgs != nil {
+		args = args.AddFlat(commandArgs)
 	}
 	return args
 }
