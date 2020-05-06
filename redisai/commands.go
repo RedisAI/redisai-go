@@ -198,3 +198,42 @@ func (c *Client) Info(key string) (map[string]string, error) {
 func (c *Client) ResetStat(key string) (string, error) {
 	return redis.String(c.DoOrSend("AI.INFO", redis.Args{key, "RESETSTAT"}, nil))
 }
+
+// Direct acyclic graph of operations to run within RedisAI
+func (c *Client) DagRun(loadKeys []string, persistKeys []string, dagCommandInterface DagCommandInterface) ([]interface{}, error) {
+	commandArgs, err := dagCommandInterface.FlatArgs()
+	if err != nil {
+		return nil, err
+	}
+	args := AddDagRunArgs(loadKeys, persistKeys, commandArgs)
+	reply, err := c.DoOrSend("AI.DAGRUN", args, nil)
+	return dagCommandInterface.ParseReply(reply, err)
+}
+
+// The command is a read-only variant of AI.DAGRUN
+func (c *Client) DagRunRO(loadKeys []string, dagCommandInterface DagCommandInterface) ([]interface{}, error) {
+	commandArgs, err := dagCommandInterface.FlatArgs()
+	if err != nil {
+		return nil, err
+	}
+	args := AddDagRunArgs(loadKeys, nil, commandArgs)
+	reply, err := c.DoOrSend("AI.DAGRUN_RO", args, nil)
+	return dagCommandInterface.ParseReply(reply, err)
+}
+
+// AddDagRunArgs for AI.DAGRUN and DAGRUN_RO commands.
+func AddDagRunArgs(loadKeys []string, persistKeys []string, commandArgs redis.Args) redis.Args {
+	args := redis.Args{}
+	if loadKeys != nil {
+		args = args.Add("LOAD", len(loadKeys)).AddFlat(loadKeys)
+	}
+
+	if persistKeys != nil {
+		args = args.Add("PERSIST", len(persistKeys)).AddFlat(persistKeys)
+	}
+
+	if commandArgs != nil {
+		args = args.AddFlat(commandArgs)
+	}
+	return args
+}

@@ -868,3 +868,113 @@ func TestCommand_Info(t *testing.T) {
 	ret, err = c.ResetStat("notExits")
 	assert.NotNil(t, err)
 }
+
+func TestCommand_DagRun(t *testing.T) {
+	c := createTestClient()
+	keyModel1 := "test:DagRun:mymodel:1"
+	data, err := ioutil.ReadFile("./../tests/test_data/graph.pb")
+	if err != nil {
+		t.Errorf("Error preparing for Info(), while issuing ModelSet. error = %v", err)
+		return
+	}
+	err = c.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"a", "b"}, []string{"mul"})
+	err = c.TensorSet("persisted_tensor_1", TypeFloat32, []int{1, 2}, []float32{5, 10})
+	assert.Nil(t, err)
+
+	type args struct {
+		loadKeys            []string
+		persistKeys         []string
+		dagCommandInterface DagCommandInterface
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"t_wrong_number", args{[]string{"notnumber"}, nil, NewDag().TensorSet("tensor1", TypeFloat32, []int{1, 2}, []int{5, 10})}, true},
+		{"t_load", args{[]string{"persisted_tensor_1"}, []string{"tensor1"}, NewDag().TensorSet("tensor1", TypeFloat32, []int{1, 2}, []int{5, 10})}, false},
+		{"t_load_err", args{[]string{"not_exits_tensor"}, []string{"tensor1"}, NewDag().TensorSet("tensor1", TypeFloat32, []int{1, 2}, []int{5, 10})}, true},
+		{"t1", args{nil, nil, NewDag().TensorSet("a", TypeFloat32, []int{1}, []float32{1.1})}, false},
+		{"t_blob", args{nil, nil, NewDag().TensorSet("a", TypeFloat32, []int{1}, []float32{1.1}).TensorSet("b", TypeFloat32, []int{1}, []float32{4.4}).ModelRun("test:DagRun:mymodel:1", []string{"a", "b"}, []string{"mul"}).TensorGet("mul", TensorContentTypeBlob)}, false},
+		{"t_values", args{nil, nil, NewDag().TensorSet("mytensor", TypeFloat32, []int{1, 2}, []int{5, 10}).TensorGet("mytensor", TensorContentTypeValues)}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := createTestClient()
+			results, err := c.DagRun(tt.args.loadKeys, tt.args.persistKeys, tt.args.dagCommandInterface)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DagRun() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			for _, result := range results {
+				ret, ok := result.(string)
+				if ok {
+					assert.Equal(t, "OK", ret)
+					continue
+				}
+				values, ok := result.([]interface{})
+				if ok {
+					vs, _ := redis.Strings(values, nil)
+					assert.True(t, len(vs) > 0)
+					continue
+				}
+				blobs, ok := result.([]byte)
+				if ok {
+					assert.True(t, len(blobs) > 0)
+					continue
+				}
+				t.Errorf("DagRun() error unsupported result")
+			}
+		})
+	}
+}
+
+func TestCommand_DagRunRO(t *testing.T) {
+	c := createTestClient()
+	err := c.TensorSet("persisted_tensor", TypeFloat32, []int{1, 2}, []float32{5, 10})
+	assert.Nil(t, err)
+	type args struct {
+		loadKeys            []string
+		dagCommandInterface DagCommandInterface
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"t_1", args{[]string{"persisted_tensor"}, NewDag().TensorGet("persisted_tensor", TensorContentTypeValues)}, false},
+		{"t_2", args{nil, NewDag().TensorSet("tensor1", TypeFloat32, []int{1, 2}, []int{5, 10}).TensorSet("tensor2", TypeFloat32, []int{1, 2}, []int{5, 10})}, false},
+		{"t_err1", args{[]string{"notnumber"}, NewDag().TensorSet("tensor1", TypeFloat32, []int{1, 2}, []int{5, 10})}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := createTestClient()
+			results, err := c.DagRunRO(tt.args.loadKeys, tt.args.dagCommandInterface)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DagRunRO() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			for _, result := range results {
+				ret, ok := result.(string)
+				if ok {
+					assert.Equal(t, "OK", ret)
+					continue
+				}
+				values, ok := result.([]interface{})
+				if ok {
+					vs, _ := redis.Strings(values, nil)
+					assert.True(t, len(vs) > 0)
+					continue
+				}
+				blobs, ok := result.([]byte)
+				if ok {
+					assert.True(t, len(blobs) > 0)
+					continue
+				}
+				t.Errorf("DagRunRO() error unsupported result")
+			}
+		})
+	}
+}
