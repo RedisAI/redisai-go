@@ -202,3 +202,48 @@ func TestClient_Receive(t *testing.T) {
 		})
 	}
 }
+
+func TestClient_DisablePipeline(t *testing.T) {
+	// Create a client.
+	client := Connect("redis://localhost:6379", nil)
+
+	// Enable pipeline of commands on the client, autoFlushing at 3 commands
+	client.Pipeline(3)
+
+	// Set a tensor
+	// AI.TENSORSET foo FLOAT 2 2 VALUES 1.1 2.2 3.3 4.4
+	err := client.TensorSet("foo1", TypeFloat, []int{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
+	if err != nil {
+		t.Errorf("TensorSet() error = %v", err)
+	}
+	// AI.TENSORSET foo2 FLOAT 1" 1 VALUES 1.1
+	err = client.TensorSet("foo2", TypeFloat, []int{1, 1}, []float32{1.1})
+	if err != nil {
+		t.Errorf("TensorSet() error = %v", err)
+	}
+	// AI.TENSORGET foo2 META
+	_, err = client.TensorGet("foo2", TensorContentTypeMeta)
+	if err != nil {
+		t.Errorf("TensorGet() error = %v", err)
+	}
+	// Ignore the AI.TENSORSET Reply
+	_, err = client.Receive()
+	if err != nil {
+		t.Errorf("Receive() error = %v", err)
+	}
+	// Ignore the AI.TENSORSET Reply
+	_, err = client.Receive()
+	if err != nil {
+		t.Errorf("Receive() error = %v", err)
+	}
+	err, _, _, _ = ProcessTensorGetReply(client.Receive())
+	if err != nil {
+		t.Errorf("ProcessTensorGetReply() error = %v", err)
+	}
+
+	err = client.DisablePipeline()
+	if err != nil {
+		t.Errorf("DisablePipeline() error = %v", err)
+	}
+
+}

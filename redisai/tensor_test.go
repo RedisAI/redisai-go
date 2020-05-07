@@ -2,6 +2,8 @@ package redisai
 
 import (
 	"github.com/RedisAI/redisai-go/redisai/converters"
+	"github.com/google/go-cmp/cmp"
+	"reflect"
 	"testing"
 )
 
@@ -45,6 +47,82 @@ func Test_tensorSetFlatArgs(t *testing.T) {
 				if got[3].(string) != tt.want {
 					t.Errorf("tensorSetFlatArgs() TensorContentType = %v, want %v", got[3], tt.want)
 				}
+			}
+		})
+	}
+}
+
+func TestTensorGetTypeStrFromType(t *testing.T) {
+	type args struct {
+		dtype reflect.Type
+	}
+	tests := []struct {
+		name        string
+		args        args
+		wantTypestr string
+		wantErr     bool
+	}{
+		{"uint8", args{reflect.TypeOf(([]uint8)(nil))}, TypeUint8, false},
+		{"uint8", args{reflect.TypeOf(([]byte)(nil))}, TypeUint8, false},
+		{"uint8", args{reflect.TypeOf(([]uint16)(nil))}, TypeUint16, false},
+		{"uint8", args{reflect.TypeOf(([]int)(nil))}, TypeInt32, false},
+		{"uint8", args{reflect.TypeOf(([]int8)(nil))}, TypeInt8, false},
+		{"uint8", args{reflect.TypeOf(([]int16)(nil))}, TypeInt16, false},
+		{"uint8", args{reflect.TypeOf(([]int32)(nil))}, TypeInt32, false},
+		{"uint8", args{reflect.TypeOf(([]int64)(nil))}, TypeInt64, false},
+		{"uint8", args{reflect.TypeOf(([]uint8)(nil))}, TypeUint8, false},
+		{"uint8", args{reflect.TypeOf(([]uint16)(nil))}, TypeUint16, false},
+		{"uint8", args{reflect.TypeOf(([]float32)(nil))}, TypeFloat32, false},
+		{"uint8", args{reflect.TypeOf(([]float64)(nil))}, TypeFloat64, false},
+		{"uint8", args{reflect.TypeOf(([]string)(nil))}, "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotTypestr, err := TensorGetTypeStrFromType(tt.args.dtype)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TensorGetTypeStrFromType() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotTypestr != tt.wantTypestr {
+				t.Errorf("TensorGetTypeStrFromType() gotTypestr = %v, want %v", gotTypestr, tt.wantTypestr)
+			}
+		})
+	}
+}
+
+func TestProcessTensorGetReply(t *testing.T) {
+	type args struct {
+		reply interface{}
+		errIn error
+	}
+	tests := []struct {
+		name      string
+		args      args
+		wantDtype string
+		wantShape []int
+		wantData  interface{}
+		wantErr   bool
+	}{
+		{"empty", args{}, "", nil, nil, true},
+		{"negative-wrong-reply", args{[]interface{}{[]interface{}{[]byte("serie 1"), []interface{}{}, []interface{}{[]interface{}{[]byte("AA"), []byte("1")}}}}, nil}, "", nil, nil, true},
+		{"negative-wrong-reply", args{[]interface{}{[]byte("dtype"), []interface{}{[]byte("dtype"), []byte("1")}}, nil}, "", nil, nil, true},
+		{"negative-wrong-shape", args{[]interface{}{[]byte("shape"), []byte("string")}, nil}, "", nil, nil, true},
+		{"negative-wrong-blob", args{[]interface{}{[]byte("dtype"), []interface{}{[]byte("dtype"), []byte("1")}}, nil}, "", nil, nil, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotErr, gotDtype, gotShape, gotData := ProcessTensorGetReply(tt.args.reply, tt.args.errIn)
+			if gotErr != nil && !tt.wantErr {
+				t.Errorf("ProcessTensorGetReply() gotErr = %v, want %v", gotErr, tt.wantErr)
+			}
+			if diff := cmp.Diff(tt.wantDtype, gotDtype); diff != "" {
+				t.Errorf("ProcessTensorGetReply() gotDtype mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.wantShape, gotShape); diff != "" {
+				t.Errorf("ProcessTensorGetReply() gotShape mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tt.wantData, gotData); diff != "" {
+				t.Errorf("ProcessTensorGetReply() gotData mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
