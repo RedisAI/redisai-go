@@ -3,6 +3,22 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
+  build-tls:
+    machine:
+      enabled: true
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          name: Install Redis with TLS support
+          command: |
+            git clone git://github.com/antirez/redis.git --branch 6.0.1
+            cd redis
+            make BUILD_TLS=yes
+            ./utils/gen-test-certs.sh
+            ./src/redis-server --version
+            cd ..
+
   build-edge: # test with redisai:edge
     docker:
       - image: circleci/golang:1.13
@@ -20,6 +36,7 @@ workflows:
   commit:
     jobs:
       - build-edge
+      - build-tls
   nightly:
     triggers:
       - schedule:
@@ -30,3 +47,4 @@ workflows:
                 - master
     jobs:
       - build-edge
+      - build-tls

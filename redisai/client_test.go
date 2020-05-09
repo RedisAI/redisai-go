@@ -22,6 +22,30 @@ func createPool() *redis.Pool {
 	return cpool
 }
 
+func getTLSdetails() (tlsready bool, tls_cert string, tls_key string, tls_cacert string) {
+	tlsready = false
+	value, exists := os.LookupEnv("TLS_CERT")
+	if exists && value != "" {
+		tls_cert = value
+	} else {
+		return
+	}
+	value, exists = os.LookupEnv("TLS_KEY")
+	if exists && value != "" {
+		tls_key = value
+	} else {
+		return
+	}
+	value, exists = os.LookupEnv("TLS_CACERT")
+	if exists && value != "" {
+		tls_cacert = value
+	} else {
+		return
+	}
+	tlsready = true
+	return
+}
+
 func createTestClient() *Client {
 	value, exists := os.LookupEnv("REDISAI_TEST_HOST")
 	host := "redis://localhost:6379"
