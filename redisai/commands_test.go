@@ -978,3 +978,48 @@ func TestCommand_DagRunRO(t *testing.T) {
 		})
 	}
 }
+
+func TestCommand_ModelScan(t *testing.T) {
+	c := createTestClient()
+	_, err := c.DoOrSend("FLUSHALL", redis.Args{}, nil)
+	// empty test
+	modelValues, err := c.ModelScan()
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(modelValues))
+
+	keyModel1 := "testModelScan"
+	model := implementations.NewModel("TF", "CPU")
+	model.SetInputs([]string{"transaction", "reference"})
+	model.SetOutputs([]string{"output"})
+	err = model.SetBlobFromFile("./../tests/test_data/creditcardfraud.pb")
+	assert.Nil(t, err)
+	err = c.ModelSetFromModel(keyModel1, model)
+	assert.Nil(t, err)
+	modelValues, err = c.ModelScan()
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(modelValues))
+	assert.Equal(t, keyModel1, modelValues[0][0])
+	assert.Empty(t, modelValues[0][1])
+}
+
+func TestCommand_ScriptScan(t *testing.T) {
+	c := createTestClient()
+	_, err := c.DoOrSend("FLUSHALL", redis.Args{}, nil)
+	// empty test
+	scriptValues, err := c.ScriptScan()
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(scriptValues))
+
+	keyScript1 := "test:ScriptScan:1"
+	scriptBin := "def bar(a, b):\n    return a + b\n"
+	err = c.ScriptSet(keyScript1, DeviceCPU, scriptBin)
+	if err != nil {
+		t.Errorf("Error preparing for ScriptScan(), while issuing ScriptSet. error = %v", err)
+		return
+	}
+	scriptValues, err = c.ScriptScan()
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(scriptValues))
+	assert.Equal(t, keyScript1, scriptValues[0][0])
+	assert.Empty(t, scriptValues[0][1])
+}

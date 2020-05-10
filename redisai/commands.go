@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
+	"log"
 	"strconv"
 )
 
@@ -236,4 +237,35 @@ func AddDagRunArgs(loadKeys []string, persistKeys []string, commandArgs redis.Ar
 		args = args.AddFlat(commandArgs)
 	}
 	return args
+}
+
+// Returns all the models in the database.
+func (c *Client) ModelScan() ([][]string, error) {
+	reply, err := c.DoOrSend("AI._MODELSCAN", redis.Args{}, nil)
+	return ParseScanResult(reply, err)
+}
+
+// Returns all the scripts in the database.
+func (c *Client) ScriptScan() ([][]string, error) {
+	reply, err := c.DoOrSend("AI._SCRIPTSCAN", redis.Args{}, nil)
+	return ParseScanResult(reply, err)
+}
+
+// ParseResult for AI._SCRIPTSCAN AI._MODELSCAN
+func ParseScanResult(reply interface{}, err error) ([][]string, error) {
+	values, err := redis.Values(reply, err)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([][]string, len(values), 2)
+	for i := 0; i < len(values); i++ {
+		if d, e := redis.Strings(values[i], nil); e == nil {
+			res[i] = d
+		} else {
+			log.Print("Error parsing ParseScanResult Reply: ", e)
+			res[i] = nil
+		}
+	}
+	return res, nil
 }
