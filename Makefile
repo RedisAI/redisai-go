@@ -16,6 +16,7 @@ get:
 TLS_CERT ?= redis.crt
 TLS_KEY ?= redis.key
 TLS_CACERT ?= ca.crt
+REDISAI_TEST_HOST ?= 127.0.0.1:6379
 
 examples: get
 	$(GOBUILD) ./examples/redisai_pipelined_client/.
@@ -23,7 +24,8 @@ examples: get
 	$(GOBUILD) ./examples/redisai_tls_client/.
 	./redisai_tls_client --tls-cert-file $(TLS_CERT) \
 						 --tls-key-file $(TLS_KEY) \
-						 --tls-ca-cert-file $(TLS_CACERT)
+						 --tls-ca-cert-file $(TLS_CACERT) \
+						 --host $(REDISAI_TEST_HOST)
 
 test: get
 	$(GOTEST) -race -covermode=atomic ./...

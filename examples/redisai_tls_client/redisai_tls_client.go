@@ -19,6 +19,9 @@ var (
 	password      = flag.String("password", "", "Redis password.")
 )
 
+/*
+ * Example of how to establish an SSL connection from your app to the RedisAI Server
+ */
 func main() {
 	flag.Parse()
 
