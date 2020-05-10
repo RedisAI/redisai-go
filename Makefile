@@ -8,7 +8,7 @@ GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 
 .PHONY: all test coverage
-all: test coverage
+all: test coverage examples
 
 get:
 	$(GOGET) -t -v ./redisai/...
@@ -19,6 +19,8 @@ TLS_CACERT ?= ca.crt
 REDISAI_TEST_HOST ?= 127.0.0.1:6379
 
 examples: get
+	@echo " "
+	@echo "Building the examples..."
 	$(GOBUILD) ./examples/redisai_pipelined_client/.
 	$(GOBUILD) ./examples/redisai_simple_client/.
 	$(GOBUILD) ./examples/redisai_tls_client/.

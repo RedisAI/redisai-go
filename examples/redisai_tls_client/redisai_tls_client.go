@@ -9,6 +9,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"io/ioutil"
 	"log"
+	"os"
 )
 
 var (
@@ -19,11 +20,26 @@ var (
 	password      = flag.String("password", "", "Redis password.")
 )
 
+func exists(filename string) (exists bool) {
+	exists = false
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) || info.IsDir() {
+		return
+	}
+	exists = true
+	return
+}
+
 /*
  * Example of how to establish an SSL connection from your app to the RedisAI Server
  */
 func main() {
 	flag.Parse()
+	// Quickly check if the files exist
+	if !exists(*tlsCertFile) || !exists(*tlsKeyFile) || !exists(*tlsCaCertFile) {
+		fmt.Println("Some of the required files does not exist. Leaving example...")
+		return
+	}
 
 	// Load client cert
 	cert, err := tls.LoadX509KeyPair(*tlsCertFile, *tlsKeyFile)
