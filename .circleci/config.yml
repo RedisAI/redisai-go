@@ -25,7 +25,7 @@ jobs:
       - run:
           name: Run RedisAI with tls support
           command: |
-            docker run -v $(pwd)/redisai.so:/data/redisai.so \
+            docker run -d -v $(pwd)/redisai.so:/data/redisai.so \
                        -v $(pwd)/redis/tests/tls/:/data \
                        -p 6379:6379 redis redis-server --tls-port 6379 --port 0  \
                        --tls-cert-file /data/redis.crt  \
