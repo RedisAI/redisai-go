@@ -8,12 +8,22 @@ import (
 	"time"
 )
 
-func createPool() *redis.Pool {
+func getConnectionDetails() (host string, password string) {
 	value, exists := os.LookupEnv("REDISAI_TEST_HOST")
-	host := "redis://localhost:6379"
+	host = "redis://127.0.0.1:6379"
+	password = ""
+	valuePassword, existsPassword := os.LookupEnv("REDISAI_TEST_PASSWORD")
 	if exists && value != "" {
 		host = value
 	}
+	if existsPassword && valuePassword != "" {
+		password = valuePassword
+	}
+	return
+}
+
+func createPool() *redis.Pool {
+	host,_ := getConnectionDetails()
 	cpool := &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,
@@ -22,25 +32,41 @@ func createPool() *redis.Pool {
 	return cpool
 }
 
-func createTestClient() *Client {
-	value, exists := os.LookupEnv("REDISAI_TEST_HOST")
-	host := "redis://localhost:6379"
+func getTLSdetails() (tlsready bool, tls_cert string, tls_key string, tls_cacert string) {
+	tlsready = false
+	value, exists := os.LookupEnv("TLS_CERT")
 	if exists && value != "" {
-		host = value
+		tls_cert = value
+	} else {
+		return
 	}
+	value, exists = os.LookupEnv("TLS_KEY")
+	if exists && value != "" {
+		tls_key = value
+	} else {
+		return
+	}
+	value, exists = os.LookupEnv("TLS_CACERT")
+	if exists && value != "" {
+		tls_cacert = value
+	} else {
+		return
+	}
+	tlsready = true
+	return
+}
+
+func createTestClient() *Client {
+	host,_ := getConnectionDetails()
 	return Connect(host, nil)
 }
 
 func TestConnect(t *testing.T) {
-	value, exists := os.LookupEnv("REDISAI_TEST_HOST")
-	urlTest1 := "redis://localhost:6379"
-	if exists && value != "" {
-		urlTest1 = value
-	}
+	host,_ := getConnectionDetails()
 	cpool1 := &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,
-		Dial:        func() (redis.Conn, error) { return redis.DialURL(urlTest1) },
+		Dial:        func() (redis.Conn, error) { return redis.DialURL(host) },
 	}
 
 	type args struct {
@@ -57,7 +83,7 @@ func TestConnect(t *testing.T) {
 		pool        *redis.Pool
 		comparePool bool
 	}{
-		{"test:Connect:WithPool:1", args{urlTest1, nil, false, 0, 0, nil}, cpool1, false},
+		{"test:Connect:WithPool:1", args{host, nil, false, 0, 0, nil}, cpool1, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -205,7 +231,7 @@ func TestClient_Receive(t *testing.T) {
 
 func TestClient_DisablePipeline(t *testing.T) {
 	// Create a client.
-	client := Connect("redis://localhost:6379", nil)
+	client := createTestClient()
 
 	// Enable pipeline of commands on the client, autoFlushing at 3 commands
 	client.Pipeline(3)
