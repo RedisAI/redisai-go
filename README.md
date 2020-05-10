@@ -27,12 +27,12 @@ AI.MODELSET | [ModelSet](https://godoc.org/github.com/RedisAI/redisai-go/redisai
 AI.MODELGET | [ModelGet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ModelGet) and [ModelGetToModel](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ModelGetToModel)
 AI.MODELDEL | [ModelDel](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ModelDel)
 AI.MODELRUN | [ModelRun](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ModelRun)
-AI._MODELSCAN |  
+AI._MODELSCAN | [ModelScan](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ModelScan)
 AI.SCRIPTSET | [ScriptSet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptSet)
 AI.SCRIPTGET | [ScriptGet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptGet)
-AI.SCRIPTDEL | [ScriptDel](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptRun)
-AI.SCRIPTRUN | [ScriptRun](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptDel)
-AI._SCRIPTSCAN |  
+AI.SCRIPTDEL | [ScriptDel](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptDel)
+AI.SCRIPTRUN | [ScriptRun](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptRun)
+AI._SCRIPTSCAN | [ScriptScan](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptScan)
 AI.DAGRUN | [DagRun](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.DagRun)
 AI.DAGRUN_RO | [DagRunRO](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.DagRunRO)
 AI.INFO |  [Info](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.Info)
