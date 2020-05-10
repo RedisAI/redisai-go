@@ -11,60 +11,61 @@ import (
 	"os"
 )
 
-func getConnectionDetails() (host string, password string) {
-	value, exists := os.LookupEnv("REDISAI_TEST_HOST")
-	host = "localhost:6379"
-	password = ""
-	valuePassword, existsPassword := os.LookupEnv("REDISAI_TEST_PASSWORD")
-	if exists && value != "" {
-		host = value
+//Example of how to establish an connection from your app to the RedisAI Server
+func ExampleConnect() {
+
+	// Create a client.
+	client := redisai.Connect("redis://localhost:6379", nil)
+
+	// Set a tensor
+	// AI.TENSORSET foo FLOAT 2 2 VALUES 1.1 2.2 3.3 4.4
+	_ = client.TensorSet("foo", redisai.TypeFloat, []int{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
+
+	// Get a tensor content as a slice of values
+	// dt DataType, shape []int, data interface{}, err error
+	// AI.TENSORGET foo VALUES
+	_, _, fooTensorValues, err := client.TensorGetValues("foo")
+
+	if err != nil {
+		log.Fatal(err)
 	}
-	if existsPassword && valuePassword != "" {
-		password = valuePassword
-	}
-	return
+
+	fmt.Println(fooTensorValues)
+	// Output: [1.1 2.2 3.3 4.4]
 }
 
-func getTLSdetails() (tlsready bool, tls_cert string, tls_key string, tls_cacert string) {
-	tlsready = false
-	value, exists := os.LookupEnv("TLS_CERT")
-	if exists && value != "" {
-		info, err := os.Stat(value)
-		if os.IsNotExist(err) || info.IsDir() {
-			return
-		}
-		tls_cert = value
-	} else {
-		return
+
+//Example of how to establish an connection with a shared pool to the RedisAI Server
+func ExampleConnect_pool() {
+
+	host := "localhost:6379"
+	password := ""
+	pool := &redis.Pool{Dial: func() (redis.Conn, error) {
+		return redis.Dial("tcp", host, redis.DialPassword(password))
+	}}
+
+	// Create a client.
+	client := redisai.Connect("", pool)
+
+	// Set a tensor
+	// AI.TENSORSET foo FLOAT 2 2 VALUES 1.1 2.2 3.3 4.4
+	_ = client.TensorSet("foo", redisai.TypeFloat, []int{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
+
+	// Get a tensor content as a slice of values
+	// dt DataType, shape []int, data interface{}, err error
+	// AI.TENSORGET foo VALUES
+	_, _, fooTensorValues, err := client.TensorGetValues("foo")
+
+	if err != nil {
+		log.Fatal(err)
 	}
-	value, exists = os.LookupEnv("TLS_KEY")
-	if exists && value != "" {
-		info, err := os.Stat(value)
-		if os.IsNotExist(err) || info.IsDir() {
-			return
-		}
-		tls_key = value
-	} else {
-		return
-	}
-	value, exists = os.LookupEnv("TLS_CACERT")
-	if exists && value != "" {
-		info, err := os.Stat(value)
-		if os.IsNotExist(err) || info.IsDir() {
-			return
-		}
-		tls_cacert = value
-	} else {
-		return
-	}
-	tlsready = true
-	return
+
+	fmt.Println(fooTensorValues)
+	// Output: [1.1 2.2 3.3 4.4]
 }
 
-/*
- * Example of how to establish an SSL connection from your app to the RedisAI Server
- */
-func ExampleConnect_TLS() {
+//Example of how to establish an SSL connection from your app to the RedisAI Server
+func ExampleConnect_ssl() {
 	// Consider the following helper methods that provide us with the connection details (host and password)
 	// and the paths for:
 	//     tls_cert - A a X.509 certificate to use for authenticating the  server to connected clients, masters or cluster peers. The file should be PEM formatted
@@ -131,4 +132,54 @@ func ExampleConnect_TLS() {
 	}
 
 	fmt.Println(fooTensorValues)
+}
+
+func getConnectionDetails() (host string, password string) {
+	value, exists := os.LookupEnv("REDISAI_TEST_HOST")
+	host = "localhost:6379"
+	password = ""
+	valuePassword, existsPassword := os.LookupEnv("REDISAI_TEST_PASSWORD")
+	if exists && value != "" {
+		host = value
+	}
+	if existsPassword && valuePassword != "" {
+		password = valuePassword
+	}
+	return
+}
+
+func getTLSdetails() (tlsready bool, tls_cert string, tls_key string, tls_cacert string) {
+	tlsready = false
+	value, exists := os.LookupEnv("TLS_CERT")
+	if exists && value != "" {
+		info, err := os.Stat(value)
+		if os.IsNotExist(err) || info.IsDir() {
+			return
+		}
+		tls_cert = value
+	} else {
+		return
+	}
+	value, exists = os.LookupEnv("TLS_KEY")
+	if exists && value != "" {
+		info, err := os.Stat(value)
+		if os.IsNotExist(err) || info.IsDir() {
+			return
+		}
+		tls_key = value
+	} else {
+		return
+	}
+	value, exists = os.LookupEnv("TLS_CACERT")
+	if exists && value != "" {
+		info, err := os.Stat(value)
+		if os.IsNotExist(err) || info.IsDir() {
+			return
+		}
+		tls_cacert = value
+	} else {
+		return
+	}
+	tlsready = true
+	return
 }

@@ -65,7 +65,11 @@ type Client struct {
 	ActiveConn            redis.Conn
 }
 
-// Connect intializes a Client
+// Connect establish an connection to the RedisAI Server.
+//
+//If a pool `*redis.Pool` is passed then it will be used to connect to the server.
+//
+// See the examples on how to connect with/without pool and on how to establish a secure SSL connection.
 func Connect(url string, pool *redis.Pool) (c *Client) {
 	var cpool *redis.Pool = nil
 	if pool == nil {
