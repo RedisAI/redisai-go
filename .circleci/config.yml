@@ -20,6 +20,13 @@ jobs:
           name: Copy RedisAI
           command: |
             docker run --rm --entrypoint cat redisai/redisai:edge  /usr/lib/redis/modules/redisai.so > redisai.so
+            docker run -v ./redisai.so:/data/redisai.so \
+                       -v ./redis/tests/tls/:/data \
+                       -p 6379:6379 redis redis-server --tls-port 6379 --port 0  \
+                       --tls-cert-file /data/redis.crt  \
+                       --tls-key-file /data/redis.key  \
+                       --tls-ca-cert-file /data/ca.crt \
+                       --tls-auth-clients no  --loadmodule /data/redisai.so
 
   build-edge: # test with redisai:edge
     docker:
