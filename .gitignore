@@ -21,5 +21,8 @@ coverage.txt
 
 # Examples
 examples/redisai_tls_client/redisai_tls_client
+redisai_pipelined_client
 examples/redisai_simple_client/redisai_simple_client
+redisai_simple_client
 examples/redisai_pipelined_client/redisai_pipelined_client
+redisai_tls_client
