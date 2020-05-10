@@ -14,10 +14,12 @@ jobs:
           command: |
             git clone git://github.com/antirez/redis.git --branch 6.0.1
             cd redis
-            make BUILD_TLS=yes
             ./utils/gen-test-certs.sh
-            ./src/redis-server --version
             cd ..
+      - run:
+          name: Copy RedisAI
+          command: |
+            docker run --rm --entrypoint cat redisai/redisai:edge  /usr/lib/redis/modules/redisai.so > redisai.so
 
   build-edge: # test with redisai:edge
     docker:
