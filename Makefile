@@ -11,7 +11,7 @@ GOMOD=$(GOCMD) mod
 all: test coverage
 
 get:
-	$(GOGET) -t -v ./...
+	$(GOGET) -t -v ./redisai/...
 
 TLS_CERT ?= redis.crt
 TLS_KEY ?= redis.key
