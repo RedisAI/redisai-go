@@ -978,3 +978,40 @@ func TestCommand_DagRunRO(t *testing.T) {
 		})
 	}
 }
+
+func TestClient_ModelRun(t *testing.T) {
+	type fields struct {
+		Pool                  *redis.Pool
+		PipelineActive        bool
+		PipelineAutoFlushSize uint32
+		PipelinePos           uint32
+		ActiveConn            redis.Conn
+	}
+	type args struct {
+		name              string
+		inputTensorNames  []string
+		outputTensorNames []string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				Pool:                  tt.fields.Pool,
+				PipelineActive:        tt.fields.PipelineActive,
+				PipelineAutoFlushSize: tt.fields.PipelineAutoFlushSize,
+				PipelinePos:           tt.fields.PipelinePos,
+				ActiveConn:            tt.fields.ActiveConn,
+			}
+			if err := c.ModelRun(tt.args.name, tt.args.inputTensorNames, tt.args.outputTensorNames); (err != nil) != tt.wantErr {
+				t.Errorf("ModelRun() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
