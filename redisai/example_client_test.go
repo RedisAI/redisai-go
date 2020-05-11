@@ -19,7 +19,7 @@ func ExampleConnect() {
 
 	// Set a tensor
 	// AI.TENSORSET foo FLOAT 2 2 VALUES 1.1 2.2 3.3 4.4
-	_ = client.TensorSet("foo", redisai.TypeFloat, []int{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
+	_ = client.TensorSet("foo", redisai.TypeFloat, []int64{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
 
 	// Get a tensor content as a slice of values
 	// dt DataType, shape []int, data interface{}, err error
@@ -49,7 +49,7 @@ func ExampleConnect_pool() {
 
 	// Set a tensor
 	// AI.TENSORSET foo FLOAT 2 2 VALUES 1.1 2.2 3.3 4.4
-	_ = client.TensorSet("foo", redisai.TypeFloat, []int{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
+	_ = client.TensorSet("foo", redisai.TypeFloat, []int64{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
 
 	// Get a tensor content as a slice of values
 	// dt DataType, shape []int, data interface{}, err error
@@ -120,7 +120,7 @@ func ExampleConnect_ssl() {
 
 	// Set a tensor
 	// AI.TENSORSET foo FLOAT 2 2 VALUES 1.1 2.2 3.3 4.4
-	_ = client.TensorSet("foo", redisai.TypeFloat, []int{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
+	_ = client.TensorSet("foo", redisai.TypeFloat, []int64{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
 
 	// Get a tensor content as a slice of values
 	// dt DataType, shape []int, data interface{}, err error

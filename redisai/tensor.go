@@ -12,15 +12,15 @@ import (
 type TensorInterface interface {
 
 	// Shape returns the size - in each dimension - of the tensor.
-	Shape() []int
+	Shape() []int64
 
-	SetShape(shape []int)
+	SetShape(shape []int64)
 
 	// NumDims returns the number of dimensions of the tensor.
-	NumDims() int
+	NumDims() int64
 
 	// Len returns the number of elements in the tensor.
-	Len() int
+	Len() int64
 
 	Dtype() reflect.Type
 
@@ -66,7 +66,7 @@ func TensorGetTypeStrFromType(dtype reflect.Type) (typestr string, err error) {
 	return
 }
 
-func tensorSetFlatArgs(name string, dt string, dims []int, data interface{}) (redis.Args, error) {
+func tensorSetFlatArgs(name string, dt string, dims []int64, data interface{}) (redis.Args, error) {
 	args := redis.Args{}
 	var err error = nil
 	args = args.Add(name, dt).AddFlat(dims)
@@ -148,7 +148,7 @@ func ProcessTensorReplyValues(dtype string, reply interface{}) (data interface{}
 	return data, err
 }
 
-func ProcessTensorGetReply(reply interface{}, errIn error) (err error, dtype string, shape []int, data interface{}) {
+func ProcessTensorGetReply(reply interface{}, errIn error) (err error, dtype string, shape []int64, data interface{}) {
 	var replySlice []interface{}
 	var key string
 	err = errIn
@@ -168,7 +168,7 @@ func ProcessTensorGetReply(reply interface{}, errIn error) (err error, dtype str
 				return
 			}
 		case "shape":
-			shape, err = redis.Ints(replySlice[pos+1], err)
+			shape, err = redis.Int64s(replySlice[pos+1], err)
 			if err != nil {
 				return
 			}

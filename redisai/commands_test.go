@@ -17,7 +17,7 @@ func TestCommand_TensorSet(t *testing.T) {
 
 	valuesInt8 := []int8{1}
 	valuesInt16 := []int16{1}
-	valuesInt32 := []int{1}
+	valuesInt32 := []int64{1}
 	valuesInt64 := []int64{1}
 
 	valuesUint8 := []uint8{1}
@@ -46,12 +46,12 @@ func TestCommand_TensorSet(t *testing.T) {
 
 	keyError1 := "test:TestCommand_TensorSet:1:FaultyDims"
 
-	shp := []int{1}
+	shp := []int64{1}
 
 	type args struct {
 		name string
 		dt   string
-		dims []int
+		dims []int64
 		data interface{}
 	}
 
@@ -78,7 +78,7 @@ func TestCommand_TensorSet(t *testing.T) {
 
 		{keyByte, args{keyByte, TypeUint8, shp, valuesByte}, false},
 
-		{keyError1, args{keyError1, TypeFloat, []int{1, 10}, []float32{1}}, true},
+		{keyError1, args{keyError1, TypeFloat, []int64{1, 10}, []float32{1}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -91,7 +91,7 @@ func TestCommand_TensorSet(t *testing.T) {
 }
 
 func TestCommand_FullFromTensor(t *testing.T) {
-	tensor := implementations.NewAiTensorWithShape([]int{1})
+	tensor := implementations.NewAiTensorWithShape([]int64{1})
 	tensor.SetData([]float32{1.0})
 	client := createTestClient()
 	err := client.TensorSetFromTensor("tensor1", tensor)
@@ -101,7 +101,7 @@ func TestCommand_FullFromTensor(t *testing.T) {
 	if diff := cmp.Diff(TypeFloat32, gotResp[0]); diff != "" {
 		t.Errorf("TestCommand_FullFromTensor() mismatch (-want +got):\n%s", diff)
 	}
-	if diff := cmp.Diff([]int{1}, gotResp[1]); diff != "" {
+	if diff := cmp.Diff([]int64{1}, gotResp[1]); diff != "" {
 		t.Errorf("TestCommand_FullFromTensor() mismatch (-want +got):\n%s", diff)
 	}
 	if diff := cmp.Diff([]float32{1.0}, gotResp[2]); diff != "" {
@@ -149,8 +149,8 @@ func TestCommand_TensorGet(t *testing.T) {
 	keyUint8 := "test:TensorGet:TypeUint8:1"
 	keyUint16 := "test:TensorGet:TypeUint16:1"
 
-	shp := []int{1}
-	shpByteSlice := []int{1, 5}
+	shp := []int64{1}
+	shpByteSlice := []int64{1, 5}
 	simpleClient := createTestClient()
 	simpleClient.TensorSet(keyByteSlice, TypeUint8, shpByteSlice, valuesByteSlice)
 
@@ -173,7 +173,7 @@ func TestCommand_TensorGet(t *testing.T) {
 		name         string
 		args         args
 		wantDt       string
-		wantShape    []int
+		wantShape    []int64
 		wantData     interface{}
 		compareDt    bool
 		compareShape bool
@@ -222,7 +222,7 @@ func TestCommand_TensorGetBlob(t *testing.T) {
 	keyByte := "test:TensorGetBlog:[]byte:1"
 	keyUnexistant := "test:TensorGetMeta:Unexistant"
 
-	shp := []int{1, 4}
+	shp := []int64{1, 4}
 	simpleClient := Connect("", createPool())
 	simpleClient.TensorSet(keyByte, TypeInt8, shp, valuesByte)
 
@@ -233,7 +233,7 @@ func TestCommand_TensorGetBlob(t *testing.T) {
 		name      string
 		args      args
 		wantDt    string
-		wantShape []int
+		wantShape []int64
 		wantData  []byte
 		wantErr   bool
 	}{
@@ -279,7 +279,7 @@ func TestCommand_TensorGetMeta(t *testing.T) {
 
 	keyUnexistant := "test:TensorGetMeta:Unexistant"
 
-	shp := []int{1, 2}
+	shp := []int64{1, 2}
 	simpleClient := Connect("", createPool())
 	simpleClient.TensorSet(keyFloat32, TypeFloat32, shp, nil)
 	simpleClient.TensorSet(keyFloat64, TypeFloat64, shp, nil)
@@ -299,7 +299,7 @@ func TestCommand_TensorGetMeta(t *testing.T) {
 		name      string
 		args      args
 		wantDt    string
-		wantShape []int
+		wantShape []int64
 		wantErr   bool
 	}{
 		{keyFloat32, args{keyFloat32}, TypeFloat32, shp, false},
@@ -354,8 +354,8 @@ func TestCommand_TensorGetValues(t *testing.T) {
 	keyUint16 := "test:TensorGetValues:TypeUint16:1"
 	keyUnexistant := "test:TensorGetValues:Unexistant"
 
-	shp := []int{1}
-	shp2 := []int{1, 5}
+	shp := []int64{1}
+	shp2 := []int64{1, 5}
 	simpleClient := Connect("", createPool())
 	simpleClient.TensorSet(keyFloat32, TypeFloat32, shp2, valuesFloat32)
 	simpleClient.TensorSet(keyFloat64, TypeFloat64, shp, valuesFloat64)
@@ -375,7 +375,7 @@ func TestCommand_TensorGetValues(t *testing.T) {
 		name      string
 		args      args
 		wantDt    string
-		wantShape []int
+		wantShape []int64
 		wantData  interface{}
 		wantErr   bool
 	}{
@@ -574,12 +574,12 @@ func TestCommand_ModelRun(t *testing.T) {
 		return
 	}
 
-	errortset := simpleClient.TensorSet(keyTransaction1, TypeFloat, []int{1, 30}, nil)
+	errortset := simpleClient.TensorSet(keyTransaction1, TypeFloat, []int64{1, 30}, nil)
 	if errortset != nil {
 		t.Error(errortset)
 	}
 
-	errortsetReference := simpleClient.TensorSet(keyReference1, TypeFloat, []int{256}, nil)
+	errortsetReference := simpleClient.TensorSet(keyReference1, TypeFloat, []int64{256}, nil)
 	if errortsetReference != nil {
 		t.Error(errortsetReference)
 	}
@@ -848,9 +848,9 @@ func TestCommand_Info(t *testing.T) {
 	assert.Equal(t, BackendTF, info["backend"])
 	assert.Equal(t, "0", info["calls"])
 
-	err = c.TensorSet("a", TypeFloat32, []int{1}, []float32{1.1})
+	err = c.TensorSet("a", TypeFloat32, []int64{1}, []float32{1.1})
 	assert.Nil(t, err)
-	err = c.TensorSet("b", TypeFloat32, []int{1}, []float32{4.4})
+	err = c.TensorSet("b", TypeFloat32, []int64{1}, []float32{4.4})
 	assert.Nil(t, err)
 	err = c.ModelRun(keyModel1, []string{"a", "b"}, []string{"mul"})
 	assert.Nil(t, err)
@@ -878,7 +878,7 @@ func TestCommand_DagRun(t *testing.T) {
 		return
 	}
 	err = c.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"a", "b"}, []string{"mul"})
-	err = c.TensorSet("persisted_tensor_1", TypeFloat32, []int{1, 2}, []float32{5, 10})
+	err = c.TensorSet("persisted_tensor_1", TypeFloat32, []int64{1, 2}, []float32{5, 10})
 	assert.Nil(t, err)
 
 	type args struct {
@@ -891,12 +891,12 @@ func TestCommand_DagRun(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"t_wrong_number", args{[]string{"notnumber"}, nil, NewDag().TensorSet("tensor1", TypeFloat32, []int{1, 2}, []int{5, 10})}, true},
-		{"t_load", args{[]string{"persisted_tensor_1"}, []string{"tensor1"}, NewDag().TensorSet("tensor1", TypeFloat32, []int{1, 2}, []int{5, 10})}, false},
-		{"t_load_err", args{[]string{"not_exits_tensor"}, []string{"tensor1"}, NewDag().TensorSet("tensor1", TypeFloat32, []int{1, 2}, []int{5, 10})}, true},
-		{"t1", args{nil, nil, NewDag().TensorSet("a", TypeFloat32, []int{1}, []float32{1.1})}, false},
-		{"t_blob", args{nil, nil, NewDag().TensorSet("a", TypeFloat32, []int{1}, []float32{1.1}).TensorSet("b", TypeFloat32, []int{1}, []float32{4.4}).ModelRun("test:DagRun:mymodel:1", []string{"a", "b"}, []string{"mul"}).TensorGet("mul", TensorContentTypeBlob)}, false},
-		{"t_values", args{nil, nil, NewDag().TensorSet("mytensor", TypeFloat32, []int{1, 2}, []int{5, 10}).TensorGet("mytensor", TensorContentTypeValues)}, false},
+		{"t_wrong_number", args{[]string{"notnumber"}, nil, NewDag().TensorSet("tensor1", TypeFloat32, []int64{1, 2}, []int64{5, 10})}, true},
+		{"t_load", args{[]string{"persisted_tensor_1"}, []string{"tensor1"}, NewDag().TensorSet("tensor1", TypeFloat32, []int64{1, 2}, []int64{5, 10})}, false},
+		{"t_load_err", args{[]string{"not_exits_tensor"}, []string{"tensor1"}, NewDag().TensorSet("tensor1", TypeFloat32, []int64{1, 2}, []int64{5, 10})}, true},
+		{"t1", args{nil, nil, NewDag().TensorSet("a", TypeFloat32, []int64{1}, []float32{1.1})}, false},
+		{"t_blob", args{nil, nil, NewDag().TensorSet("a", TypeFloat32, []int64{1}, []float32{1.1}).TensorSet("b", TypeFloat32, []int64{1}, []float32{4.4}).ModelRun("test:DagRun:mymodel:1", []string{"a", "b"}, []string{"mul"}).TensorGet("mul", TensorContentTypeBlob)}, false},
+		{"t_values", args{nil, nil, NewDag().TensorSet("mytensor", TypeFloat32, []int64{1, 2}, []int64{5, 10}).TensorGet("mytensor", TensorContentTypeValues)}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -932,7 +932,7 @@ func TestCommand_DagRun(t *testing.T) {
 
 func TestCommand_DagRunRO(t *testing.T) {
 	c := createTestClient()
-	err := c.TensorSet("persisted_tensor", TypeFloat32, []int{1, 2}, []float32{5, 10})
+	err := c.TensorSet("persisted_tensor", TypeFloat32, []int64{1, 2}, []float32{5, 10})
 	assert.Nil(t, err)
 	type args struct {
 		loadKeys            []string
@@ -944,8 +944,8 @@ func TestCommand_DagRunRO(t *testing.T) {
 		wantErr bool
 	}{
 		{"t_1", args{[]string{"persisted_tensor"}, NewDag().TensorGet("persisted_tensor", TensorContentTypeValues)}, false},
-		{"t_2", args{nil, NewDag().TensorSet("tensor1", TypeFloat32, []int{1, 2}, []int{5, 10}).TensorSet("tensor2", TypeFloat32, []int{1, 2}, []int{5, 10})}, false},
-		{"t_err1", args{[]string{"notnumber"}, NewDag().TensorSet("tensor1", TypeFloat32, []int{1, 2}, []int{5, 10})}, true},
+		{"t_2", args{nil, NewDag().TensorSet("tensor1", TypeFloat32, []int64{1, 2}, []int64{5, 10}).TensorSet("tensor2", TypeFloat32, []int64{1, 2}, []int64{5, 10})}, false},
+		{"t_err1", args{[]string{"notnumber"}, NewDag().TensorSet("tensor1", TypeFloat32, []int64{1, 2}, []int64{5, 10})}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

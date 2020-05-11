@@ -8,7 +8,7 @@ import (
 )
 
 // TensorSet sets a tensor
-func (c *Client) TensorSet(keyName, dt string, dims []int, data interface{}) (err error) {
+func (c *Client) TensorSet(keyName, dt string, dims []int64, data interface{}) (err error) {
 	args, err := tensorSetFlatArgs(keyName, dt, dims, data)
 	_, err = c.DoOrSend("AI.TENSORSET", args, err)
 	return
@@ -45,7 +45,7 @@ func (c *Client) TensorGetToTensor(name, format string, tensor TensorInterface) 
 }
 
 // TensorGetValues gets a tensor's values
-func (c *Client) TensorGetValues(name string) (dt string, shape []int, data interface{}, err error) {
+func (c *Client) TensorGetValues(name string) (dt string, shape []int64, data interface{}, err error) {
 	args := redis.Args{}.Add(name, TensorContentTypeMeta, TensorContentTypeValues)
 	var reply interface{}
 	reply, err = c.DoOrSend("AI.TENSORGET", args, nil)
@@ -57,7 +57,7 @@ func (c *Client) TensorGetValues(name string) (dt string, shape []int, data inte
 }
 
 // TensorGetValues gets a tensor's values
-func (c *Client) TensorGetMeta(name string) (dt string, shape []int, err error) {
+func (c *Client) TensorGetMeta(name string) (dt string, shape []int64, err error) {
 	args := redis.Args{}.Add(name, TensorContentTypeMeta)
 	var reply interface{}
 	reply, err = c.DoOrSend("AI.TENSORGET", args, nil)
@@ -69,7 +69,7 @@ func (c *Client) TensorGetMeta(name string) (dt string, shape []int, err error) 
 }
 
 // TensorGetValues gets a tensor's values
-func (c *Client) TensorGetBlob(name string) (dt string, shape []int, data []byte, err error) {
+func (c *Client) TensorGetBlob(name string) (dt string, shape []int64, data []byte, err error) {
 	args := redis.Args{}.Add(name, TensorContentTypeMeta, TensorContentTypeBlob)
 	var reply interface{}
 	reply, err = c.DoOrSend("AI.TENSORGET", args, nil)

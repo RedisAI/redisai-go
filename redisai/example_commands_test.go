@@ -13,7 +13,7 @@ func ExampleClient_TensorSet() {
 
 	// Set a tensor
 	// AI.TENSORSET foo FLOAT 2 2 VALUES 1.1 2.2 3.3 4.4
-	err := client.TensorSet("foo", redisai.TypeFloat, []int{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
+	err := client.TensorSet("foo", redisai.TypeFloat, []int64{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
 
 	// print the error (should be <nil>)
 	fmt.Println(err)
@@ -26,7 +26,7 @@ func ExampleClient_TensorSetFromTensor() {
 
 	// Build a tensor
 	tensor := implementations.NewAiTensor()
-	tensor.SetShape([]int{2, 2})
+	tensor.SetShape([]int64{2, 2})
 	tensor.SetData([]float32{1.1, 2.2, 3.3, 4.4})
 
 	// Set a tensor
@@ -44,7 +44,7 @@ func ExampleClient_TensorGet() {
 
 	// Set a tensor
 	// AI.TENSORSET foo FLOAT 2 2 VALUES 1.1 2.2 3.3 4.4
-	_ = client.TensorSet("foo", redisai.TypeFloat, []int{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
+	_ = client.TensorSet("foo", redisai.TypeFloat, []int64{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
 
 	// Get a tensor content as a slice of values
 	// AI.TENSORGET foo VALUES
@@ -60,7 +60,7 @@ func ExampleClient_TensorGetToTensor() {
 
 	// Set a tensor
 	// AI.TENSORSET foo FLOAT 2 2 VALUES 1.1 2.2 3.3 4.4
-	_ = client.TensorSet("foo", redisai.TypeFloat, []int{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
+	_ = client.TensorSet("foo", redisai.TypeFloat, []int64{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
 
 	// Get a tensor content as a slice of values
 	// AI.TENSORGET foo VALUES
@@ -172,8 +172,8 @@ func ExampleClient_ModelRun() {
 	fmt.Println(err)
 
 	// set the input tensors
-	err = client.TensorSet("a", redisai.TypeFloat32, []int{1}, []float32{1.1})
-	err = client.TensorSet("b", redisai.TypeFloat32, []int{1}, []float32{4.4})
+	err = client.TensorSet("a", redisai.TypeFloat32, []int64{1}, []float32{1.1})
+	err = client.TensorSet("b", redisai.TypeFloat32, []int64{1}, []float32{4.4})
 
 	// run the model
 	err = client.ModelRun("example-model", []string{"a", "b"}, []string{"mul"})
@@ -199,8 +199,8 @@ func ExampleClient_Info() {
 	fmt.Println(err)
 
 	// set the input tensors
-	err = client.TensorSet("a", redisai.TypeFloat32, []int{1}, []float32{1.1})
-	err = client.TensorSet("b", redisai.TypeFloat32, []int{1}, []float32{4.4})
+	err = client.TensorSet("a", redisai.TypeFloat32, []int64{1}, []float32{1.1})
+	err = client.TensorSet("b", redisai.TypeFloat32, []int64{1}, []float32{4.4})
 
 	// run the model
 	err = client.ModelRun("example-info", []string{"a", "b"}, []string{"mul"})
