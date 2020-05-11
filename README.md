@@ -30,8 +30,8 @@ AI.MODELRUN | [ModelRun](https://godoc.org/github.com/RedisAI/redisai-go/redisai
 AI._MODELSCAN |  
 AI.SCRIPTSET | [ScriptSet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptSet)
 AI.SCRIPTGET | [ScriptGet](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptGet)
-AI.SCRIPTDEL | [ScriptDel](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptRun)
-AI.SCRIPTRUN | [ScriptRun](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptDel)
+AI.SCRIPTDEL | [ScriptDel](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptDel)
+AI.SCRIPTRUN | [ScriptRun](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.ScriptRun)
 AI._SCRIPTSCAN |  
 AI.DAGRUN | [DagRun](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.DagRun)
 AI.DAGRUN_RO | [DagRunRO](https://godoc.org/github.com/RedisAI/redisai-go/redisai#Client.DagRunRO)
