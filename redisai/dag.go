@@ -5,7 +5,7 @@ import "github.com/gomodule/redigo/redis"
 // DagCommandInterface is an interface that represents the skeleton of DAG supported commands
 // needed to map it to a RedisAI DAGRUN and DAGURN_RO commands
 type DagCommandInterface interface {
-	TensorSet(keyName, dt string, dims []int, data interface{}) DagCommandInterface
+	TensorSet(keyName, dt string, dims []int64, data interface{}) DagCommandInterface
 	TensorGet(name, format string) DagCommandInterface
 	ModelRun(name string, inputTensorNames, outputTensorNames []string) DagCommandInterface
 	FlatArgs() (redis.Args, error)
@@ -22,7 +22,7 @@ func NewDag() *Dag {
 	}
 }
 
-func (d *Dag) TensorSet(keyName, dt string, dims []int, data interface{}) DagCommandInterface {
+func (d *Dag) TensorSet(keyName, dt string, dims []int64, data interface{}) DagCommandInterface {
 	args := redis.Args{"AI.TENSORSET"}
 	setFlatArgs, err := tensorSetFlatArgs(keyName, dt, dims, data)
 	if err == nil {

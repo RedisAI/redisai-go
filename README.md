@@ -61,7 +61,7 @@ func main() {
 
 	// Set a tensor
 	// AI.TENSORSET foo FLOAT 2 2 VALUES 1.1 2.2 3.3 4.4
-	_ = client.TensorSet("foo", redisai.TypeFloat, []int{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
+	_ = client.TensorSet("foo", redisai.TypeFloat, []int64{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
 
 	// Get a tensor content as a slice of values
 	// dt DataType, shape []int, data interface{}, err error
@@ -98,12 +98,12 @@ func main() {
 
 	// Set a tensor
 	// AI.TENSORSET foo FLOAT 2 2 VALUES 1.1 2.2 3.3 4.4
-	err := client.TensorSet("foo1", redisai.TypeFloat, []int{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
+	err := client.TensorSet("foo1", redisai.TypeFloat, []int64{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
 	if err != nil {
 		log.Fatal(err)
 	}
 	// AI.TENSORSET foo2 FLOAT 1" 1 VALUES 1.1
-	err = client.TensorSet("foo2", redisai.TypeFloat, []int{1, 1}, []float32{1.1})
+	err = client.TensorSet("foo2", redisai.TypeFloat, []int64{1, 1}, []float32{1.1})
 	if err != nil {
 		log.Fatal(err)
 	}

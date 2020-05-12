@@ -238,12 +238,12 @@ func TestClient_DisablePipeline(t *testing.T) {
 
 	// Set a tensor
 	// AI.TENSORSET foo FLOAT 2 2 VALUES 1.1 2.2 3.3 4.4
-	err := client.TensorSet("foo1", TypeFloat, []int{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
+	err := client.TensorSet("foo1", TypeFloat, []int64{2, 2}, []float32{1.1, 2.2, 3.3, 4.4})
 	if err != nil {
 		t.Errorf("TensorSet() error = %v", err)
 	}
 	// AI.TENSORSET foo2 FLOAT 1" 1 VALUES 1.1
-	err = client.TensorSet("foo2", TypeFloat, []int{1, 1}, []float32{1.1})
+	err = client.TensorSet("foo2", TypeFloat, []int64{1, 1}, []float32{1.1})
 	if err != nil {
 		t.Errorf("TensorSet() error = %v", err)
 	}
