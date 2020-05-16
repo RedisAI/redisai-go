@@ -621,8 +621,12 @@ func TestCommand_FullFromModelFlow(t *testing.T) {
 	assert.Nil(t, err)
 	model1.SetInputs([]string{"transaction", "reference"})
 	model1.SetOutputs([]string{"output"})
+	model1.SetTag("financialTag")
 	err = client.ModelSetFromModel("financialNet1", model1)
 	assert.Nil(t, err)
+	model2 := implementations.NewEmptyModel()
+	err = client.ModelGetToModel("financialNet1", model2)
+	assert.Equal(t, model1.Tag(), model2.Tag())
 }
 
 func TestCommand_ScriptDel(t *testing.T) {
@@ -684,6 +688,14 @@ func TestCommand_ScriptGet(t *testing.T) {
 		return
 	}
 
+	keyScript2 := "test:ScriptGet:2"
+	keyScriptTag := "keyScriptTag"
+	err = simpleClient.ScriptSetWithTag(keyScript2, DeviceCPU, scriptBin, keyScriptTag)
+	if err != nil {
+		t.Errorf("Error preparing for ScriptGet(), while issuing ScriptSet. error = %v", err)
+		return
+	}
+
 	type args struct {
 		name string
 	}
@@ -692,11 +704,13 @@ func TestCommand_ScriptGet(t *testing.T) {
 		args           args
 		wantDeviceType string
 		wantData       string
+		wantTag        string
 		wantErr        bool
 	}{
-		{keyScript, args{keyScript}, DeviceCPU, "", false},
-		{keyScriptPipelined, args{keyScript}, DeviceCPU, "", false},
-		{keyScriptEmpty, args{keyScriptEmpty}, DeviceCPU, "", true},
+		{keyScript, args{keyScript}, DeviceCPU, "", "", false},
+		{keyScriptPipelined, args{keyScript}, DeviceCPU, "", "", false},
+		{keyScriptEmpty, args{keyScriptEmpty}, DeviceCPU, "", "", true},
+		{keyScriptTag, args{keyScript2}, DeviceCPU, "", keyScriptTag, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -706,12 +720,16 @@ func TestCommand_ScriptGet(t *testing.T) {
 				t.Errorf("ScriptGet() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if tt.wantErr == false {
 				if !reflect.DeepEqual(gotData["device"], tt.wantDeviceType) {
 					t.Errorf("ScriptGet() gotData = %v, want %v", gotData["device"], tt.wantDeviceType)
 				}
 				if !reflect.DeepEqual(gotData["source"], tt.wantData) {
 					t.Errorf("ScriptGet() gotData = %v, want %v", gotData["source"], tt.wantData)
+				}
+				if !reflect.DeepEqual(gotData["tag"], tt.wantTag) {
+					t.Errorf("ScriptGet() gotData = %v, want %v", gotData["tag"], tt.wantTag)
 				}
 			}
 

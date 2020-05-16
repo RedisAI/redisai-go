@@ -138,6 +138,13 @@ func (c *Client) ScriptSet(name string, device string, script_source string) (er
 	return
 }
 
+// ScriptSetWithTag sets a RedisAI script from a blob with tag
+func (c *Client) ScriptSetWithTag(name string, device string, script_source string, tag string) (err error) {
+	args := redis.Args{}.Add(name, device, "TAG", tag, "SOURCE", script_source)
+	_, err = c.DoOrSend("AI.SCRIPTSET", args, nil)
+	return
+}
+
 func (c *Client) ScriptGet(name string) (data map[string]string, err error) {
 	args := redis.Args{}.Add(name, "META", "SOURCE")
 	respInitial, err := c.DoOrSend("AI.SCRIPTGET", args, nil)
