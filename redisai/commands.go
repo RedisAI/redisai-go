@@ -83,7 +83,7 @@ func (c *Client) TensorGetBlob(name string) (dt string, shape []int64, data []by
 
 // ModelSet sets a RedisAI model from a blob
 func (c *Client) ModelSet(keyName, backend, device string, data []byte, inputs, outputs []string) (err error) {
-	args := modelSetFlatArgs(keyName, backend, device, inputs, outputs, data)
+	args := modelSetFlatArgs(keyName, backend, device, "", inputs, outputs, data)
 	_, err = c.DoOrSend("AI.MODELSET", args, nil)
 	return
 }
@@ -95,15 +95,21 @@ func (c *Client) ModelSetFromModel(keyName string, model ModelInterface) (err er
 	return
 }
 
+// ModelGet gets a RedisAI model from the RedisAI server
+// The reply will an array, containing at
+//    - position 0 the backend used by the model as a String
+//    - position 1 the device used to execute the model as a String
+//    - position 2 the model's tag as a String
+//    - position 3 a blob containing the serialized model (when called with the BLOB argument) as a String
 func (c *Client) ModelGet(keyName string) (data []interface{}, err error) {
 	var reply interface{}
-	data = make([]interface{}, 3)
+	data = make([]interface{}, 4)
 	args := modelGetFlatArgs(keyName)
 	reply, err = c.DoOrSend("AI.MODELGET", args, nil)
 	if err != nil || reply == nil {
 		return
 	}
-	err, data[0], data[1], data[2] = modelGetParseReply(reply)
+	err, data[0], data[1], data[2], data[3] = modelGetParseReply(reply)
 	return
 }
 
@@ -134,6 +140,13 @@ func (c *Client) ModelRun(name string, inputTensorNames, outputTensorNames []str
 // ScriptSet sets a RedisAI script from a blob
 func (c *Client) ScriptSet(name string, device string, script_source string) (err error) {
 	args := redis.Args{}.Add(name, device, "SOURCE", script_source)
+	_, err = c.DoOrSend("AI.SCRIPTSET", args, nil)
+	return
+}
+
+// ScriptSetWithTag sets a RedisAI script from a blob with tag
+func (c *Client) ScriptSetWithTag(name string, device string, script_source string, tag string) (err error) {
+	args := redis.Args{}.Add(name, device, "TAG", tag, "SOURCE", script_source)
 	_, err = c.DoOrSend("AI.SCRIPTSET", args, nil)
 	return
 }

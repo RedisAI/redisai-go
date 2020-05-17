@@ -8,6 +8,7 @@ type AIModel struct {
 	blob    []byte
 	inputs  []string
 	outputs []string
+	tag     string
 }
 
 func (m *AIModel) Outputs() []string {
@@ -48,6 +49,14 @@ func (m *AIModel) Backend() string {
 
 func (m *AIModel) SetBackend(backend string) {
 	m.backend = backend
+}
+
+func (m *AIModel) Tag() string {
+	return m.tag
+}
+
+func (m *AIModel) SetTag(tag string) {
+	m.tag = tag
 }
 
 func NewModel(backend string, device string) *AIModel {

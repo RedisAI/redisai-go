@@ -17,10 +17,15 @@ type ModelInterface interface {
 	SetDevice(device string)
 	Backend() string
 	SetBackend(backend string)
+	Tag() string
+	SetTag(tag string)
 }
 
-func modelSetFlatArgs(keyName, backend, device string, inputs, outputs []string, blob []byte) redis.Args {
+func modelSetFlatArgs(keyName, backend, device, tag string, inputs, outputs []string, blob []byte) redis.Args {
 	args := redis.Args{}.Add(keyName, backend, device)
+	if len(tag) > 0 {
+		args = args.Add("TAG", tag)
+	}
 	if len(inputs) > 0 {
 		args = args.Add("INPUTS").AddFlat(inputs)
 	}
@@ -33,7 +38,26 @@ func modelSetFlatArgs(keyName, backend, device string, inputs, outputs []string,
 }
 
 func modelSetInterfaceArgs(keyName string, modelInterface ModelInterface) redis.Args {
-	return modelSetFlatArgs(keyName, modelInterface.Backend(), modelInterface.Device(), modelInterface.Inputs(), modelInterface.Outputs(), modelInterface.Blob())
+	args := redis.Args{keyName}
+	if len(modelInterface.Backend()) > 0 {
+		args = args.Add(modelInterface.Backend())
+	}
+	if len(modelInterface.Device()) > 0 {
+		args = args.Add(modelInterface.Device())
+	}
+	if len(modelInterface.Tag()) > 0 {
+		args = args.Add("TAG", modelInterface.Tag())
+	}
+	if len(modelInterface.Inputs()) > 0 {
+		args = args.Add("INPUTS").AddFlat(modelInterface.Inputs())
+	}
+	if len(modelInterface.Outputs()) > 0 {
+		args = args.Add("OUTPUTS").AddFlat(modelInterface.Outputs())
+	}
+	if modelInterface.Blob() != nil {
+		args = args.Add("BLOB", modelInterface.Blob())
+	}
+	return args
 }
 
 func modelRunFlatArgs(name string, inputTensorNames, outputTensorNames []string) redis.Args {
@@ -51,18 +75,20 @@ func modelRunFlatArgs(name string, inputTensorNames, outputTensorNames []string)
 func modelGetParseToInterface(reply interface{}, model ModelInterface) (err error) {
 	var backend string
 	var device string
+	var tag string
 	var blob []byte
-	err, backend, device, blob = modelGetParseReply(reply)
+	err, backend, device, tag, blob = modelGetParseReply(reply)
 	if err != nil {
 		return err
 	}
 	model.SetBackend(backend)
 	model.SetDevice(device)
+	model.SetTag(tag)
 	model.SetBlob(blob)
 	return
 }
 
-func modelGetParseReply(reply interface{}) (err error, backend string, device string, blob []byte) {
+func modelGetParseReply(reply interface{}) (err error, backend string, device string, tag string, blob []byte) {
 	var replySlice []interface{}
 	var key string
 	replySlice, err = redis.Values(reply, err)
@@ -87,6 +113,11 @@ func modelGetParseReply(reply interface{}) (err error, backend string, device st
 			}
 		case "blob":
 			blob, err = redis.Bytes(replySlice[pos+1], err)
+			if err != nil {
+				return
+			}
+		case "tag":
+			tag, err = redis.String(replySlice[pos+1], err)
 			if err != nil {
 				return
 			}
