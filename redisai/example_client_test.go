@@ -34,7 +34,6 @@ func ExampleConnect() {
 	// Output: [1.1 2.2 3.3 4.4]
 }
 
-
 //Example of how to establish an connection with a shared pool to the RedisAI Server
 func ExampleConnect_pool() {
 

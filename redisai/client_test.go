@@ -23,7 +23,7 @@ func getConnectionDetails() (host string, password string) {
 }
 
 func createPool() *redis.Pool {
-	host,_ := getConnectionDetails()
+	host, _ := getConnectionDetails()
 	cpool := &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,
@@ -57,12 +57,12 @@ func getTLSdetails() (tlsready bool, tls_cert string, tls_key string, tls_cacert
 }
 
 func createTestClient() *Client {
-	host,_ := getConnectionDetails()
+	host, _ := getConnectionDetails()
 	return Connect(host, nil)
 }
 
 func TestConnect(t *testing.T) {
-	host,_ := getConnectionDetails()
+	host, _ := getConnectionDetails()
 	cpool1 := &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,
