@@ -100,7 +100,7 @@ func ExampleClient_ModelGet() {
 	device := reply[1]
 	// print the error (should be <nil>)
 	fmt.Println(err)
-	fmt.Println(backend,device)
+	fmt.Println(backend, device)
 
 	// Output:
 	// <nil>
@@ -184,7 +184,6 @@ func ExampleClient_ModelRun() {
 	// <nil>
 	// <nil>
 }
-
 
 func ExampleClient_Info() {
 	// Create a client.

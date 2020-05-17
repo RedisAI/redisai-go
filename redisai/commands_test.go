@@ -476,11 +476,12 @@ func TestCommand_ModelGet(t *testing.T) {
 		args        args
 		wantBackend string
 		wantDevice  string
+		wantTag     string
 		wantData    []byte
 		wantErr     bool
 	}{
-		{keyModelUnexistent1, args{keyModelUnexistent1}, BackendTF, DeviceCPU, data, true},
-		{keyModel1, args{keyModel1}, BackendTF, DeviceCPU, data, false},
+		{keyModelUnexistent1, args{keyModelUnexistent1}, BackendTF, DeviceCPU, "", data, true},
+		{keyModel1, args{keyModel1}, BackendTF, DeviceCPU, "", data, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -501,8 +502,13 @@ func TestCommand_ModelGet(t *testing.T) {
 				}
 			}
 			if !tt.wantErr {
-				if !reflect.DeepEqual(gotData[2], tt.wantData) {
-					t.Errorf("ModelGetToModel() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[2], tt.wantData, reflect.TypeOf(gotData[2]), reflect.TypeOf(tt.wantData))
+				if !reflect.DeepEqual(gotData[2], tt.wantTag) {
+					t.Errorf("ModelGetToModel() gotTag = %v, want %v. gotTag Type %v, want Type %v.", gotData[2], tt.wantTag, reflect.TypeOf(gotData[2]), reflect.TypeOf(tt.wantTag))
+				}
+			}
+			if !tt.wantErr {
+				if !reflect.DeepEqual(gotData[3], tt.wantData) {
+					t.Errorf("ModelGetToModel() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[3], tt.wantData, reflect.TypeOf(gotData[3]), reflect.TypeOf(tt.wantData))
 				}
 			}
 

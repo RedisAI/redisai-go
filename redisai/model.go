@@ -1,7 +1,6 @@
 package redisai
 
 import (
-	"github.com/RedisAI/redisai-go/redisai/implementations"
 	"github.com/gomodule/redigo/redis"
 )
 
@@ -22,12 +21,20 @@ type ModelInterface interface {
 	SetTag(tag string)
 }
 
-func modelSetFlatArgs(keyName, backend, device string, inputs, outputs []string, blob []byte) redis.Args {
-	modelInterface := implementations.NewModel(backend, device)
-	modelInterface.SetInputs(inputs)
-	modelInterface.SetOutputs(outputs)
-	modelInterface.SetBlob(blob)
-	return modelSetInterfaceArgs(keyName, modelInterface)
+func modelSetFlatArgs(keyName, backend, device, tag string, inputs, outputs []string, blob []byte) redis.Args {
+	args := redis.Args{}.Add(keyName, backend, device)
+	if len(tag) > 0 {
+		args = args.Add("TAG", tag)
+	}
+	if len(inputs) > 0 {
+		args = args.Add("INPUTS").AddFlat(inputs)
+	}
+	if len(outputs) > 0 {
+		args = args.Add("OUTPUTS").AddFlat(outputs)
+	}
+	args = args.Add("BLOB")
+	args = args.Add(blob)
+	return args
 }
 
 func modelSetInterfaceArgs(keyName string, modelInterface ModelInterface) redis.Args {
@@ -54,24 +61,40 @@ func modelSetInterfaceArgs(keyName string, modelInterface ModelInterface) redis.
 }
 
 func modelRunFlatArgs(name string, inputTensorNames, outputTensorNames []string) redis.Args {
-	modelInterface := implementations.NewEmptyModel()
-	modelInterface.SetInputs(inputTensorNames)
-	modelInterface.SetOutputs(outputTensorNames)
-	return modelSetInterfaceArgs(name, modelInterface)
+	args := redis.Args{}
+	args = args.Add(name)
+	if len(inputTensorNames) > 0 {
+		args = args.Add("INPUTS").AddFlat(inputTensorNames)
+	}
+	if len(outputTensorNames) > 0 {
+		args = args.Add("OUTPUTS").AddFlat(outputTensorNames)
+	}
+	return args
 }
 
 func modelGetParseToInterface(reply interface{}, model ModelInterface) (err error) {
+	var backend string
+	var device string
+	var tag string
+	var blob []byte
+	err, backend, device, tag, blob = modelGetParseReply(reply)
+	if err != nil {
+		return err
+	}
+	model.SetBackend(backend)
+	model.SetDevice(device)
+	model.SetTag(tag)
+	model.SetBlob(blob)
+	return
+}
+
+func modelGetParseReply(reply interface{}) (err error, backend string, device string, tag string, blob []byte) {
 	var replySlice []interface{}
 	var key string
 	replySlice, err = redis.Values(reply, err)
 	if err != nil {
 		return
 	}
-
-	var backend string
-	var device string
-	var blob []byte
-	var tag string
 	for pos := 0; pos < len(replySlice); pos += 2 {
 		key, err = redis.String(replySlice[pos], err)
 		if err != nil {
@@ -83,34 +106,24 @@ func modelGetParseToInterface(reply interface{}, model ModelInterface) (err erro
 			if err != nil {
 				return
 			}
-			model.SetBackend(backend)
 		case "device":
 			device, err = redis.String(replySlice[pos+1], err)
 			if err != nil {
 				return
 			}
-			model.SetDevice(device)
 		case "blob":
 			blob, err = redis.Bytes(replySlice[pos+1], err)
 			if err != nil {
 				return
 			}
-			model.SetBlob(blob)
 		case "tag":
 			tag, err = redis.String(replySlice[pos+1], err)
 			if err != nil {
 				return
 			}
-			model.SetTag(tag)
 		}
 	}
-	return err
-}
-
-func modelGetParseReply(reply interface{}) (err error, backend string, device string, blob []byte) {
-	modelInterface := implementations.NewEmptyModel()
-	err = modelGetParseToInterface(reply, modelInterface)
-	return err, modelInterface.Backend(), modelInterface.Device(), modelInterface.Blob()
+	return
 }
 
 func modelGetFlatArgs(name string) redis.Args {
