@@ -627,6 +627,8 @@ func TestCommand_FullFromModelFlow(t *testing.T) {
 	assert.Nil(t, err)
 	model1.SetInputs([]string{"transaction", "reference"})
 	model1.SetOutputs([]string{"output"})
+	model1.SetBatchSize(3)
+	model1.SetMinBatchSize(1)
 	model1.SetTag("financialTag")
 	err = client.ModelSetFromModel("financialNet1", model1)
 	assert.Nil(t, err)
