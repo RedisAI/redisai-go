@@ -3,12 +3,14 @@ package implementations
 import "io/ioutil"
 
 type AIModel struct {
-	backend string
-	device  string
-	blob    []byte
-	inputs  []string
-	outputs []string
-	tag     string
+	backend      string
+	device       string
+	blob         []byte
+	inputs       []string
+	outputs      []string
+	tag          string
+	batchSize    int64
+	minBatchSize int64
 }
 
 func (m *AIModel) Outputs() []string {
@@ -57,6 +59,22 @@ func (m *AIModel) Tag() string {
 
 func (m *AIModel) SetTag(tag string) {
 	m.tag = tag
+}
+
+func (m *AIModel) BatchSize() int64 {
+	return m.batchSize
+}
+
+func (m *AIModel) SetBatchSize(batchSize int64) {
+	m.batchSize = batchSize
+}
+
+func (m *AIModel) MinBatchSize() int64 {
+	return m.minBatchSize
+}
+
+func (m *AIModel) SetMinBatchSize(minBatchSize int64) {
+	m.minBatchSize = minBatchSize
 }
 
 func NewModel(backend string, device string) *AIModel {

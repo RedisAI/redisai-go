@@ -19,6 +19,10 @@ type ModelInterface interface {
 	SetBackend(backend string)
 	Tag() string
 	SetTag(tag string)
+	BatchSize() int64
+	SetBatchSize(batchSize int64)
+	MinBatchSize() int64
+	SetMinBatchSize(minBatchSize int64)
 }
 
 func modelSetFlatArgs(keyName, backend, device, tag string, inputs, outputs []string, blob []byte) redis.Args {
@@ -47,6 +51,12 @@ func modelSetInterfaceArgs(keyName string, modelInterface ModelInterface) redis.
 	}
 	if len(modelInterface.Tag()) > 0 {
 		args = args.Add("TAG", modelInterface.Tag())
+	}
+	if modelInterface.BatchSize() > 0 {
+		args = args.Add("BATCHSIZE", modelInterface.BatchSize())
+		if modelInterface.MinBatchSize() > 0 {
+			args = args.Add("MINBATCHSIZE", modelInterface.MinBatchSize())
+		}
 	}
 	if len(modelInterface.Inputs()) > 0 {
 		args = args.Add("INPUTS").AddFlat(modelInterface.Inputs())
