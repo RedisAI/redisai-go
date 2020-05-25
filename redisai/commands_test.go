@@ -1041,3 +1041,10 @@ func TestClient_ModelRun(t *testing.T) {
 		})
 	}
 }
+
+func TestCommand_SetBackendPath(t *testing.T) {
+	c := createTestClient()
+	ret, err := c.SetBackendPath("/usr/lib/redis/modules/backends/")
+	assert.Nil(t, err)
+	assert.Equal(t, "OK", ret)
+}
