@@ -252,6 +252,6 @@ func AddDagRunArgs(loadKeys []string, persistKeys []string, commandArgs redis.Ar
 }
 
 // Sets the default backends path
-func (c *Client) SetBackendPath(path string) (string, error) {
+func (c *Client) SetBackendsPath(path string) (string, error) {
 	return redis.String(c.DoOrSend("AI.CONFIG", redis.Args{"BACKENDSPATH", path}, nil))
 }
