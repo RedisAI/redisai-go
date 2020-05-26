@@ -24,7 +24,7 @@ func (t *AITensor) NumDims() int64 {
 }
 
 func (t *AITensor) Len() int64 {
-	var result  int64 = 0
+	var result int64 = 0
 	for _, v := range t.shape {
 		result += v
 	}

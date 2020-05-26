@@ -71,7 +71,7 @@ type Client struct {
 //
 // See the examples on how to connect with/without pool and on how to establish a secure SSL connection.
 func Connect(url string, pool *redis.Pool) (c *Client) {
-	var cpool *redis.Pool = nil
+	var cpool *redis.Pool
 	if pool == nil {
 		cpool = &redis.Pool{
 			MaxIdle:     3,
