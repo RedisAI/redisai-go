@@ -14,6 +14,7 @@ jobs:
           command: |
             go version
             go env -w GOPATH=$HOME/go
+      - run: make checkfmt
       - run:
           name: Generate a root CA and a server certificate using redis helpers
           command: |
@@ -51,6 +52,7 @@ jobs:
     working_directory: /go/src/github.com/RedisAI/redisai-go
     steps:
       - checkout
+      - run: make checkfmt
       - run: make get
       - run: make coverage
       - run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}

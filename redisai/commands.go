@@ -197,7 +197,6 @@ func (c *Client) Info(key string) (map[string]string, error) {
 		switch v := values[i+1].(type) {
 		case []byte:
 			m[k] = string(values[i+1].([]byte))
-			break
 		case int64:
 			m[k] = strconv.FormatInt(values[i+1].(int64), 10)
 		default:

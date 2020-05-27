@@ -6,11 +6,22 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
+GOFMT=$(GOCMD) fmt
 
 .PHONY: all test coverage
 all: test coverage examples
 
+checkfmt:
+	@echo 'Checking gofmt';\
+ 	bash -c "diff -u <(echo -n) <(gofmt -d .)";\
+	EXIT_CODE=$$?;\
+	if [ "$$EXIT_CODE"  -ne 0 ]; then \
+		echo '$@: Go files must be formatted with gofmt'; \
+	fi && \
+	exit $$EXIT_CODE
+
 get:
+	GO111MODULE=on $(GOGET) github.com/golangci/golangci-lint/cmd/golangci-lint
 	$(GOGET) -t -v ./redisai/...
 
 TLS_CERT ?= redis.crt
@@ -30,6 +41,8 @@ examples: get
 						 --host $(REDISAI_TEST_HOST)
 
 test: get
+	$(GOFMT) ./...
+	golangci-lint run
 	$(GOTEST) -race -covermode=atomic ./...
 
 coverage: get test

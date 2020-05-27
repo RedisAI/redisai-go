@@ -117,7 +117,6 @@ func Float32sBytes(reply interface{}, dimension []int, err error) ([]float32, er
 	for i := 1; i < len(dimension); i++ {
 		totalResults *= dimension[i]
 	}
-	fmt.Errorf(fmt.Sprintf("Total results %d", totalResults))
 
 	var result = make([]float32, totalResults)
 	tr, err := redis.Bytes(reply, err)
@@ -125,7 +124,6 @@ func Float32sBytes(reply interface{}, dimension []int, err error) ([]float32, er
 		return result, err
 	}
 	buf := bytes.NewReader(tr)
-	fmt.Errorf(fmt.Sprintf("Total results %d", totalResults))
 	for i := 0; i < totalResults; i++ {
 		err := binary.Read(buf, binary.LittleEndian, &result[i])
 		if err != nil {
