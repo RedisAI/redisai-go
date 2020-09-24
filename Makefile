@@ -7,6 +7,7 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 GOFMT=$(GOCMD) fmt
+GODOC=GO111MODULE=on godoc
 
 .PHONY: all test coverage
 all: test coverage examples
@@ -43,8 +44,11 @@ examples: get
 test: get
 	$(GOFMT) ./...
 	golangci-lint run
-	$(GOTEST) -race -covermode=atomic ./...
+	$(GOTEST) -count=1 ./...
 
 coverage: get test
 	$(GOTEST) -race -coverprofile=coverage.txt -covermode=atomic ./redisai
+
+doc:
+	$(GODOC)
 
