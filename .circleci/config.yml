@@ -25,7 +25,7 @@ jobs:
       - run:
           name: Copy RedisAI
           command: |
-            docker run --rm --entrypoint cat redisai/redisai:edge  /usr/lib/redis/modules/redisai.so > redisai.so
+            docker run --rm --entrypoint cat redislabs/redisai:edge  /usr/lib/redis/modules/redisai.so > redisai.so
             chmod 755 redisai.so
       - run:
           name: Run RedisAI with tls support
@@ -47,7 +47,7 @@ jobs:
   build-edge: # test with redisai:edge
     docker:
       - image: circleci/golang:1.13
-      - image: redisai/redisai:edge
+      - image: redislabs/redisai:edge
 
     working_directory: /go/src/github.com/RedisAI/redisai-go
     steps:
