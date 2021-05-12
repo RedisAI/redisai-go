@@ -4,11 +4,11 @@
 version: 2
 jobs:
   build-tls:
-    machine:
-      enabled: true
-      image: ubuntu-1604:202004-01
+    docker:
+      - image: circleci/golang:1.16
     steps:
       - checkout
+      - setup_remote_docker
       - run:
           name: Setting GOPATH
           command: |
@@ -31,7 +31,7 @@ jobs:
           name: Run RedisAI with tls support
           command: |
             docker run -d -v $(pwd)/redisai.so:/data/redisai.so \
-                       -v $(pwd)/redis/tests/tls/:/data \
+                       -v $(pwd)/redis/utils/tests/tls/:/data \
                        -p 6379:6379 redis redis-server --tls-port 6379 --port 0  \
                        --tls-cert-file /data/redis.crt  \
                        --tls-key-file /data/redis.key  \
@@ -40,9 +40,9 @@ jobs:
       - run:
           name: Run Examples
           command: |
-            make examples TLS_CERT=redis/tests/tls/redis.crt \
-                          TLS_KEY=redis/tests/tls/redis.key \
-                          TLS_CACERT=redis/tests/tls/ca.crt
+            make examples TLS_CERT=redis/utils/tests/tls/redis.crt \
+                          TLS_KEY=redis/utils/tests/tls/redis.key \
+                          TLS_CACERT=redis/utils/tests/tls/ca.crt
 
   build-edge: # test with redisai:edge-cpu
     docker:
