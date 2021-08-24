@@ -113,7 +113,7 @@ func (c *Client) ModelGet(keyName string) (data []interface{}, err error) {
 	return
 }
 
-// ModelGet gets a RedisAI model from the RedisAI server as ModelInterface
+// ModelGetToModel gets a RedisAI model from the RedisAI server as ModelInterface
 func (c *Client) ModelGetToModel(keyName string, modelIn ModelInterface) (err error) {
 	args := modelGetFlatArgs(keyName)
 	var reply interface{}
@@ -170,8 +170,8 @@ func (c *Client) ScriptGet(name string) (data []interface{}, err error) {
 	return
 }
 
-// ScriptGetToModel gets a RedisAI script from the RedisAI server as ScriptInterface
-func (c *Client) ScriptGetToModel(name string, scriptIn ScriptInterface) (err error) {
+// ScriptGetToInterface gets a RedisAI script from the RedisAI server as ScriptInterface
+func (c *Client) ScriptGetToInterface(name string, scriptIn ScriptInterface) (err error) {
 	args := scriptGetFlatArgs(name)
 	reply, err := c.DoOrSend("AI.SCRIPTGET", args, nil)
 	if err != nil || reply == nil {
