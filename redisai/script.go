@@ -75,6 +75,20 @@ func scriptGetFlatArgs(name string) redis.Args {
 	return args
 }
 
+func scriptSetInterfaceArgs(keyName string, scriptInterface ScriptInterface) redis.Args {
+	args := redis.Args{keyName}
+	if len(scriptInterface.Device()) > 0 {
+		args = args.Add(scriptInterface.Device())
+	}
+	if len(scriptInterface.Tag()) > 0 {
+		args = args.Add("TAG", scriptInterface.Tag())
+	}
+	if len(scriptInterface.Source()) > 0 {
+		args = args.Add("SOURCE", scriptInterface.Source())
+	}
+	return args
+}
+
 func scriptRunFlatArgs(name string, fn string, inputs []string, outputs []string) redis.Args {
 	args := redis.Args{}.Add(name, fn)
 	if len(inputs) > 0 {

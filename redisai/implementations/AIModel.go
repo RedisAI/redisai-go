@@ -2,6 +2,7 @@ package implementations
 
 import "io/ioutil"
 
+//AIModel holds the model proprties
 type AIModel struct {
 	backend      string
 	device       string

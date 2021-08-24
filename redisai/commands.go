@@ -152,6 +152,13 @@ func (c *Client) ScriptSetWithTag(name string, device string, script_source stri
 	return
 }
 
+// ScriptSetFromInteface sets a RedisAI script from a structure that implements the ScriptInterface
+func (c *Client) ScriptSetFromInteface(keyName string, script ScriptInterface) (err error) {
+	args := scriptSetInterfaceArgs(keyName, script)
+	_, err = c.DoOrSend("AI.SCRIPTSET", args, nil)
+	return
+}
+
 // ScriptGet gets a RedisAI script from the RedisAI server
 // The reply will an array, containing at
 //    - position 0 the script's device as a String

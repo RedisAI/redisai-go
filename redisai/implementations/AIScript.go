@@ -53,7 +53,7 @@ func NewScript(device string) *AIScript {
 	return &AIScript{device: device}
 }
 
-//NewEmptycript create empty AIScript
-func NewEmptycript() *AIScript {
+//NewEmptyScript create empty AIScript
+func NewEmptyScript() *AIScript {
 	return &AIScript{}
 }

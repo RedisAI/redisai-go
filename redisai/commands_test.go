@@ -780,7 +780,7 @@ func TestCommand_ScriptGetToInterface(t *testing.T) {
 	}
 
 	c := createTestClient()
-	scriptInterface := implementations.NewEmptycript()
+	scriptInterface := implementations.NewEmptyScript()
 	err = c.ScriptGetToInterface(keyScript, scriptInterface)
 	assert.Nil(t, err)
 	assert.Equal(t, scriptInterface.Device(), DeviceCPU)
@@ -795,7 +795,11 @@ func TestCommand_ScriptRun(t *testing.T) {
 	keyScript3Empty := "test:ScriptRun:3:Empty"
 	scriptBin := "def bar(a, b):\n    return a + b\n"
 	simpleClient := Connect("", createPool())
-	err := simpleClient.ScriptSet(keyScript1, DeviceCPU, scriptBin)
+
+	scriptInterface := implementations.NewEmptyScript()
+	scriptInterface.SetDevice(DeviceCPU)
+	scriptInterface.SetSource(scriptBin)
+	err := simpleClient.ScriptSetFromInteface(keyScript1, scriptInterface)
 	if err != nil {
 		t.Errorf("Error preparing for ScriptRun(), while issuing ScriptSet. error = %v", err)
 		return
