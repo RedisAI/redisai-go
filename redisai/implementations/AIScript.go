@@ -1,6 +1,6 @@
 package implementations
 
-//AIScript holds the script proprties 
+//AIScript holds the script proprties
 type AIScript struct {
 	device      string
 	tag         string
@@ -48,12 +48,12 @@ func (m *AIScript) SetEntryPoints(entryPoinys []string) {
 	m.entryPoints = entryPoinys
 }
 
-//NewScript create a new AIScript with the given device 
+//NewScript create a new AIScript with the given device
 func NewScript(device string) *AIScript {
 	return &AIScript{device: device}
 }
 
-//NewEmptycript create empty AIScript 
+//NewEmptycript create empty AIScript
 func NewEmptycript() *AIScript {
 	return &AIScript{}
 }
