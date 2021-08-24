@@ -102,7 +102,7 @@ func (c *Client) ModelSetFromModel(keyName string, model ModelInterface) (err er
 //    - position 2 the model's tag as a String
 //    - position 3 a blob containing the serialized model (when called with the BLOB argument) as a String
 //    - position 4 the maximum size of any batch of incoming requests.
-//	  - position 5 the minimum size of any batch of incoming requests.
+//    - position 5 the minimum size of any batch of incoming requests.
 //    - position 6 array reply with one or more names of the model's input nodes (applicable only for TensorFlow models).
 //    - position 7 array reply with one or more names of the model's output nodes (applicable only for TensorFlow models).
 func (c *Client) ModelGet(keyName string) (data []interface{}, err error) {
