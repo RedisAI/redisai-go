@@ -488,27 +488,27 @@ func TestCommand_ModelGet(t *testing.T) {
 			client := createTestClient()
 			gotData, err := client.ModelGet(tt.args.name)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ModelGetToModel() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ModelGet() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[0], tt.wantBackend) {
-					t.Errorf("ModelGetToModel() gotBackend = %v, want %v. gotBackend Type %v, want Type %v.", gotData[0], tt.wantBackend, reflect.TypeOf(gotData[0]), reflect.TypeOf(tt.wantBackend))
+					t.Errorf("ModelGet() gotBackend = %v, want %v. gotBackend Type %v, want Type %v.", gotData[0], tt.wantBackend, reflect.TypeOf(gotData[0]), reflect.TypeOf(tt.wantBackend))
 				}
 			}
 			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[1], tt.wantDevice) {
-					t.Errorf("ModelGetToModel() gotDevice = %v, want %v. gotDevice Type %v, want Type %v.", gotData[1], tt.wantDevice, reflect.TypeOf(gotData[1]), reflect.TypeOf(tt.wantDevice))
+					t.Errorf("ModelGet() gotDevice = %v, want %v. gotDevice Type %v, want Type %v.", gotData[1], tt.wantDevice, reflect.TypeOf(gotData[1]), reflect.TypeOf(tt.wantDevice))
 				}
 			}
 			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[2], tt.wantTag) {
-					t.Errorf("ModelGetToModel() gotTag = %v, want %v. gotTag Type %v, want Type %v.", gotData[2], tt.wantTag, reflect.TypeOf(gotData[2]), reflect.TypeOf(tt.wantTag))
+					t.Errorf("ModelGet() gotTag = %v, want %v. gotTag Type %v, want Type %v.", gotData[2], tt.wantTag, reflect.TypeOf(gotData[2]), reflect.TypeOf(tt.wantTag))
 				}
 			}
 			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[3], tt.wantData) {
-					t.Errorf("ModelGetToModel() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[3], tt.wantData, reflect.TypeOf(gotData[3]), reflect.TypeOf(tt.wantData))
+					t.Errorf("ModelGet() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[3], tt.wantData, reflect.TypeOf(gotData[3]), reflect.TypeOf(tt.wantData))
 				}
 			}
 
@@ -635,6 +635,9 @@ func TestCommand_FullFromModelFlow(t *testing.T) {
 	model2 := implementations.NewEmptyModel()
 	err = client.ModelGetToModel("financialNet1", model2)
 	assert.Equal(t, model1.Tag(), model2.Tag())
+	assert.Equal(t, model1.BatchSize(), model2.BatchSize())
+	assert.Equal(t, model1.MinBatchSize(), model2.MinBatchSize())
+	assert.Equal(t, model1.Outputs(), model2.Outputs())
 }
 
 func TestCommand_ScriptDel(t *testing.T) {

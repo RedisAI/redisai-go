@@ -101,15 +101,19 @@ func (c *Client) ModelSetFromModel(keyName string, model ModelInterface) (err er
 //    - position 1 the device used to execute the model as a String
 //    - position 2 the model's tag as a String
 //    - position 3 a blob containing the serialized model (when called with the BLOB argument) as a String
+//    - position 4 the maximum size of any batch of incoming requests.
+//	  - position 5 the minimum size of any batch of incoming requests.
+//    - position 6 array reply with one or more names of the model's input nodes (applicable only for TensorFlow models).
+//    - position 7 array reply with one or more names of the model's output nodes (applicable only for TensorFlow models).
 func (c *Client) ModelGet(keyName string) (data []interface{}, err error) {
 	var reply interface{}
-	data = make([]interface{}, 4)
+	data = make([]interface{}, 8)
 	args := modelGetFlatArgs(keyName)
 	reply, err = c.DoOrSend("AI.MODELGET", args, nil)
 	if err != nil || reply == nil {
 		return
 	}
-	err, data[0], data[1], data[2], data[3] = modelGetParseReply(reply)
+	err, data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7] = modelGetParseReply(reply)
 	return
 }
 

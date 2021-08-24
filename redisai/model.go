@@ -83,11 +83,7 @@ func modelRunFlatArgs(name string, inputTensorNames, outputTensorNames []string)
 }
 
 func modelGetParseToInterface(reply interface{}, model ModelInterface) (err error) {
-	var backend string
-	var device string
-	var tag string
-	var blob []byte
-	err, backend, device, tag, blob = modelGetParseReply(reply)
+	err, backend, device, tag, blob, batchsize, minbatchsize, inputs, outputs := modelGetParseReply(reply)
 	if err != nil {
 		return err
 	}
@@ -95,10 +91,14 @@ func modelGetParseToInterface(reply interface{}, model ModelInterface) (err erro
 	model.SetDevice(device)
 	model.SetTag(tag)
 	model.SetBlob(blob)
+	model.SetBatchSize(batchsize)
+	model.SetMinBatchSize(minbatchsize)
+	model.SetInputs(inputs)
+	model.SetOutputs(outputs)
 	return
 }
 
-func modelGetParseReply(reply interface{}) (err error, backend string, device string, tag string, blob []byte) {
+func modelGetParseReply(reply interface{}) (err error, backend string, device string, tag string, blob []byte, batchsize int64, minbatchsize int64, inputs []string, outputs []string) {
 	var replySlice []interface{}
 	var key string
 	replySlice, err = redis.Values(reply, err)
@@ -128,6 +128,26 @@ func modelGetParseReply(reply interface{}) (err error, backend string, device st
 			}
 		case "tag":
 			tag, err = redis.String(replySlice[pos+1], err)
+			if err != nil {
+				return
+			}
+		case "batchsize":
+			batchsize, err = redis.Int64(replySlice[pos+1], err)
+			if err != nil {
+				return
+			}
+		case "minbatchsize":
+			minbatchsize, err = redis.Int64(replySlice[pos+1], err)
+			if err != nil {
+				return
+			}
+		case "inputs":
+			inputs, err = redis.Strings(replySlice[pos+1], err)
+			if err != nil {
+				return
+			}
+		case "outputs":
+			outputs, err = redis.Strings(replySlice[pos+1], err)
 			if err != nil {
 				return
 			}
