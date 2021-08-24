@@ -1,5 +1,6 @@
 package implementations
 
+//AIScript holds the script proprties 
 type AIScript struct {
 	device      string
 	tag         string
