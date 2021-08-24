@@ -720,12 +720,13 @@ func TestCommand_ScriptGet(t *testing.T) {
 		wantDeviceType string
 		wantData       string
 		wantTag        string
+		wantEntryPoint []string
 		wantErr        bool
 	}{
-		{keyScript, args{keyScript}, DeviceCPU, "", "", false},
-		{keyScriptPipelined, args{keyScript}, DeviceCPU, "", "", false},
-		{keyScriptEmpty, args{keyScriptEmpty}, DeviceCPU, "", "", true},
-		{keyScriptTag, args{keyScript2}, DeviceCPU, "", keyScriptTag, false},
+		{keyScript, args{keyScript}, DeviceCPU, "", "", []string{}, false},
+		{keyScriptPipelined, args{keyScript}, DeviceCPU, "", "", []string{}, false},
+		{keyScriptEmpty, args{keyScriptEmpty}, DeviceCPU, "", "", []string{}, true},
+		{keyScriptTag, args{keyScript2}, DeviceCPU, "", keyScriptTag, []string{}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -740,11 +741,14 @@ func TestCommand_ScriptGet(t *testing.T) {
 				if !reflect.DeepEqual(gotData[0], tt.wantDeviceType) {
 					t.Errorf("ScriptGet() gotData = %v, want %v", gotData[0], tt.wantDeviceType)
 				}
+				if !reflect.DeepEqual(gotData[1], tt.wantTag) {
+					t.Errorf("ScriptGet() gotData = %v, want %v", gotData[1], tt.wantTag)
+				}
 				if !reflect.DeepEqual(gotData[2], tt.wantData) {
 					t.Errorf("ScriptGet() gotData = %v, want %v", gotData[2], tt.wantData)
 				}
-				if !reflect.DeepEqual(gotData[1], tt.wantTag) {
-					t.Errorf("ScriptGet() gotData = %v, want %v", gotData[1], tt.wantTag)
+				if !reflect.DeepEqual(gotData[3], tt.wantEntryPoint) {
+					t.Errorf("ScriptGet() gotData = %v, want %v", gotData[3], tt.wantEntryPoint)
 				}
 			}
 
