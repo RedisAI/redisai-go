@@ -22,11 +22,11 @@ func Test_modelGetParseReply(t *testing.T) {
 		wantOutputs      []string
 		wantErr          bool
 	}{
-		{"empty", args{}, "", "", "", nil, 0, 0, []string{}, []string{}, true},
-		{"negative-wrong-reply", args{[]interface{}{[]interface{}{[]byte("serie 1"), []interface{}{}, []interface{}{[]interface{}{[]byte("AA"), []byte("1")}}}}}, "", "", "", nil, 0, 0, []string{}, []string{}, true},
-		{"negative-wrong-reply", args{[]interface{}{[]byte("dtype"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, []string{}, []string{}, true},
-		{"negative-wrong-device", args{[]interface{}{[]byte("device"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, []string{}, []string{}, true},
-		{"negative-wrong-blob", args{[]interface{}{[]byte("blob"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, []string{}, []string{}, true},
+		{"empty", args{}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"negative-wrong-reply", args{[]interface{}{[]interface{}{[]byte("serie 1"), []interface{}{}, []interface{}{[]interface{}{[]byte("AA"), []byte("1")}}}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"negative-wrong-reply", args{[]interface{}{[]byte("dtype"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"negative-wrong-device", args{[]interface{}{[]byte("device"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"negative-wrong-blob", args{[]interface{}{[]byte("blob"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
