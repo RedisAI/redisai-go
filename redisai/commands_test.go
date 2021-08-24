@@ -10,6 +10,18 @@ import (
 	"testing"
 )
 
+var script string = `
+def bar(tensors: List[Tensor], keys: List[str], args: List[str]):
+	a = tensors[0]
+	b = tensors[1]
+	return a + b
+
+def bar_variadic(tensors: List[Tensor], keys: List[str], args: List[str]):
+	a = tensors[0]
+	l = tensors[1:]
+	return a + l[0]
+`
+
 func TestCommand_TensorSet(t *testing.T) {
 
 	valuesFloat32 := []float32{1.1}
@@ -754,6 +766,27 @@ func TestCommand_ScriptGet(t *testing.T) {
 
 		})
 	}
+}
+
+func TestCommand_ScriptGetToInterface(t *testing.T) {
+	keyScript := "test:ScriptGet:1"
+	simpleClient := Connect("", createPool())
+	tag := "bar"
+
+	err := simpleClient.ScriptSetWithTag(keyScript, DeviceCPU, script, tag)
+	if err != nil {
+		t.Errorf("Error preparing for ScriptGetToInterface(), while issuing ScriptSet. error = %v", err)
+		return
+	}
+
+	c := createTestClient()
+	scriptInterface := implementations.NewEmptycript()
+	err = c.ScriptGetToInterface(keyScript, scriptInterface)
+	assert.Nil(t, err)
+	assert.Equal(t, scriptInterface.Device(), DeviceCPU)
+	assert.Equal(t, scriptInterface.Tag(), tag)
+	assert.Equal(t, scriptInterface.EntryPoints(), []string{})
+	assert.Equal(t, scriptInterface.Source(), script)
 }
 
 func TestCommand_ScriptRun(t *testing.T) {
