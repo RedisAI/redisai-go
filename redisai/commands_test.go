@@ -114,6 +114,7 @@ func TestCommand_FullFromTensor(t *testing.T) {
 	// test for BLOB equality
 	tensor2BlobData := implementations.NewAiTensor()
 	err = client.TensorGetToTensor("tensor1", TensorContentTypeBlob, tensor2BlobData)
+	assert.Nil(t, err)
 	_, _, blob, err := client.TensorGetBlob("tensor1")
 	assert.Nil(t, err)
 	if diff := cmp.Diff(blob, tensor2BlobData.Data()); diff != "" {
@@ -573,8 +574,12 @@ func TestCommand_ModelRun(t *testing.T) {
 	}
 	simpleClient := Connect("", createPool())
 	err = simpleClient.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
-	err = simpleClient.ModelSet(keyModel2, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
+	if err != nil {
+		t.Errorf("Error preparing for ModelRun(), while issuing ModelSet. error = %v", err)
+		return
+	}
 
+	err = simpleClient.ModelSet(keyModel2, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
 	if err != nil {
 		t.Errorf("Error preparing for ModelRun(), while issuing ModelSet. error = %v", err)
 		return
@@ -621,6 +626,7 @@ func TestCommand_FullFromModelFlow(t *testing.T) {
 	err := model.SetBlobFromFile("./../tests/test_data/creditcardfraud.pb")
 	assert.Nil(t, err)
 	err = client.ModelSetFromModel("financialNet", model)
+	assert.Nil(t, err)
 	model1 := implementations.NewEmptyModel()
 	err = client.ModelGetToModel("financialNet", model1)
 	assert.Equal(t, model.Device(), model1.Device())
@@ -634,6 +640,7 @@ func TestCommand_FullFromModelFlow(t *testing.T) {
 	assert.Nil(t, err)
 	model2 := implementations.NewEmptyModel()
 	err = client.ModelGetToModel("financialNet1", model2)
+	assert.Nil(t, err)
 	assert.Equal(t, model1.Tag(), model2.Tag())
 }
 
@@ -730,14 +737,14 @@ func TestCommand_ScriptGet(t *testing.T) {
 			}
 
 			if tt.wantErr == false {
-				if !reflect.DeepEqual(gotData["device"], tt.wantDeviceType) {
-					t.Errorf("ScriptGet() gotData = %v, want %v", gotData["device"], tt.wantDeviceType)
+				if !reflect.DeepEqual(gotData[0], tt.wantDeviceType) {
+					t.Errorf("ScriptGet() gotData = %v, want %v", gotData[0], tt.wantDeviceType)
 				}
-				if !reflect.DeepEqual(gotData["source"], tt.wantData) {
-					t.Errorf("ScriptGet() gotData = %v, want %v", gotData["source"], tt.wantData)
+				if !reflect.DeepEqual(gotData[2], tt.wantData) {
+					t.Errorf("ScriptGet() gotData = %v, want %v", gotData[2], tt.wantData)
 				}
-				if !reflect.DeepEqual(gotData["tag"], tt.wantTag) {
-					t.Errorf("ScriptGet() gotData = %v, want %v", gotData["tag"], tt.wantTag)
+				if !reflect.DeepEqual(gotData[1], tt.wantTag) {
+					t.Errorf("ScriptGet() gotData = %v, want %v", gotData[1], tt.wantTag)
 				}
 			}
 
@@ -868,6 +875,7 @@ func TestCommand_Info(t *testing.T) {
 
 	// first inited info
 	info, err := c.Info(keyModel1)
+	assert.Nil(t, err)
 	assert.NotNil(t, info)
 	assert.Equal(t, keyModel1, info["key"])
 	assert.Equal(t, DeviceCPU, info["device"])
@@ -880,18 +888,18 @@ func TestCommand_Info(t *testing.T) {
 	assert.Nil(t, err)
 	err = c.ModelRun(keyModel1, []string{"a", "b"}, []string{"mul"})
 	assert.Nil(t, err)
-	info, err = c.Info(keyModel1)
+	info, _ = c.Info(keyModel1)
 	// one model runs
 	assert.Equal(t, "1", info["calls"])
 
 	// reset
-	ret, err := c.ResetStat(keyModel1)
+	ret, _ := c.ResetStat(keyModel1)
 	assert.Equal(t, "OK", ret)
-	info, err = c.Info(keyModel1)
+	info, _ = c.Info(keyModel1)
 	assert.Equal(t, "0", info["calls"])
 
 	// not exits
-	ret, err = c.ResetStat("notExits")
+	_, err = c.ResetStat("notExits")
 	assert.NotNil(t, err)
 }
 
@@ -904,6 +912,7 @@ func TestCommand_DagRun(t *testing.T) {
 		return
 	}
 	err = c.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"a", "b"}, []string{"mul"})
+	assert.Nil(t, err)
 	err = c.TensorSet("persisted_tensor_1", TypeFloat32, []int64{1, 2}, []float32{5, 10})
 	assert.Nil(t, err)
 
