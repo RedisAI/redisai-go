@@ -472,16 +472,20 @@ func TestCommand_ModelGet(t *testing.T) {
 		name string
 	}
 	tests := []struct {
-		name        string
-		args        args
-		wantBackend string
-		wantDevice  string
-		wantTag     string
-		wantData    []byte
-		wantErr     bool
+		name             string
+		args             args
+		wantBackend      string
+		wantDevice       string
+		wantTag          string
+		wantData         []byte
+		wantBatchsize    int64
+		wantMinbatchsize int64
+		wantInputs       []string
+		wantOutputs      []string
+		wantErr          bool
 	}{
-		{keyModelUnexistent1, args{keyModelUnexistent1}, BackendTF, DeviceCPU, "", data, true},
-		{keyModel1, args{keyModel1}, BackendTF, DeviceCPU, "", data, false},
+		{keyModelUnexistent1, args{keyModelUnexistent1}, BackendTF, DeviceCPU, "", data, 0, 0, nil, nil, true},
+		{keyModel1, args{keyModel1}, BackendTF, DeviceCPU, "", data, 0, 0, []string{"transaction", "reference"}, []string{"output"}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -509,6 +513,26 @@ func TestCommand_ModelGet(t *testing.T) {
 			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[3], tt.wantData) {
 					t.Errorf("ModelGet() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[3], tt.wantData, reflect.TypeOf(gotData[3]), reflect.TypeOf(tt.wantData))
+				}
+			}
+			if !tt.wantErr {
+				if !reflect.DeepEqual(gotData[4], tt.wantBatchsize) {
+					t.Errorf("ModelGet() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[4], tt.wantBatchsize, reflect.TypeOf(gotData[4]), reflect.TypeOf(tt.wantBatchsize))
+				}
+			}
+			if !tt.wantErr {
+				if !reflect.DeepEqual(gotData[5], tt.wantMinbatchsize) {
+					t.Errorf("ModelGet() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[5], tt.wantMinbatchsize, reflect.TypeOf(gotData[5]), reflect.TypeOf(tt.wantMinbatchsize))
+				}
+			}
+			if !tt.wantErr {
+				if !reflect.DeepEqual(gotData[6], tt.wantInputs) {
+					t.Errorf("ModelGet() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[6], tt.wantInputs, reflect.TypeOf(gotData[6]), reflect.TypeOf(tt.wantInputs))
+				}
+			}
+			if !tt.wantErr {
+				if !reflect.DeepEqual(gotData[7], tt.wantOutputs) {
+					t.Errorf("ModelGet() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[7], tt.wantOutputs, reflect.TypeOf(gotData[7]), reflect.TypeOf(tt.wantOutputs))
 				}
 			}
 

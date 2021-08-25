@@ -27,6 +27,11 @@ func Test_modelGetParseReply(t *testing.T) {
 		{"negative-wrong-reply", args{[]interface{}{[]byte("dtype"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
 		{"negative-wrong-device", args{[]interface{}{[]byte("device"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
 		{"negative-wrong-blob", args{[]interface{}{[]byte("blob"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"negative-wrong-batchsize", args{[]interface{}{[]byte("batchsize"), []interface{}{[]byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"negative-wrong-minbatchsize", args{[]interface{}{[]byte("minbatchsize"), []interface{}{[]byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"negative-wrong-inputs", args{[]interface{}{[]byte("inputs"), []interface{}{[]interface{}{[]byte("bar"), []byte("foo")}}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"negative-wrong-output", args{[]interface{}{[]byte("output"), []interface{}{[]interface{}{[]byte("output")}}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		// need to understand how to insert inputs or outputs !!
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
