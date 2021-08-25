@@ -1,6 +1,7 @@
 package redisai
 
 import (
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 )
@@ -39,28 +40,24 @@ func Test_modelGetParseReply(t *testing.T) {
 				t.Errorf("modelGetParseReply() gotErr = %v, want %v", gotErr, tt.wantErr)
 			}
 			if gotBackend != tt.wantBackend {
-				t.Errorf("modelGetParseReply() gotBackend = %v, want %v", gotBackend, tt.wantBackend)
+				t.Errorf("modelGetParseReply() gotBackend = %v, want %v. gotErr = %v", gotBackend, tt.wantBackend, gotErr)
 			}
 			if gotDevice != tt.wantDevice {
-				t.Errorf("modelGetParseReply() gotDevice = %v, want %v", gotDevice, tt.wantDevice)
+				t.Errorf("modelGetParseReply() gotDevice = %v, want %v. gotErr = %v", gotDevice, tt.wantDevice, gotErr)
 			}
 			if gotTag != tt.wantTag {
-				t.Errorf("modelGetParseReply() gotTag = %v, want %v", gotTag, tt.wantTag)
+				t.Errorf("modelGetParseReply() gotTag = %v, want %v. gotErr = %v", gotTag, tt.wantTag, gotErr)
 			}
 			if gotBatchsize != tt.wantBatchsize {
-				t.Errorf("modelGetParseReply() gotBatchsize = %v, want %v", gotBatchsize, tt.wantBatchsize)
+				t.Errorf("modelGetParseReply() gotBatchsize = %v, want %v. gotErr = %v", gotBatchsize, tt.wantBatchsize, gotErr)
 			}
 			if gotMinbatchsize != tt.wantMinbatchsize {
-				t.Errorf("modelGetParseReply() gotMinbatchsize = %v, want %v", gotMinbatchsize, tt.wantMinbatchsize)
+				t.Errorf("modelGetParseReply() gotMinbatchsize = %v, want %v. gotErr = %v", gotMinbatchsize, tt.wantMinbatchsize, gotErr)
 			}
-			if !reflect.DeepEqual(gotInputs, tt.wantInputs) {
-				t.Errorf("modelGetParseReply() gotInputs = %v, want %v", gotInputs, tt.wantInputs)
-			}
-			if !reflect.DeepEqual(gotOutputs, tt.wantOutputs) {
-				t.Errorf("modelGetParseReply() gotOutputs = %v, want %v", gotOutputs, tt.wantOutputs)
-			}
+			assert.EqualValues(t, gotInputs, tt.wantInputs, "modelGetParseReply() gotInputs = %v, want %v. gotErr = %v", gotInputs, tt.wantInputs, gotErr)
+			assert.EqualValues(t, gotOutputs, tt.wantOutputs, "modelGetParseReply() gotOutputs = %v, want %v. gotErr = %v", gotOutputs, tt.wantOutputs, gotErr)
 			if !reflect.DeepEqual(gotBlob, tt.wantBlob) {
-				t.Errorf("modelGetParseReply() gotBlob = %v, want %v", gotBlob, tt.wantBlob)
+				t.Errorf("modelGetParseReply() gotBlob = %v, want %v. gotErr = %v", gotBlob, tt.wantBlob, gotErr)
 			}
 		})
 	}

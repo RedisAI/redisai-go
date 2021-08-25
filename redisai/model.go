@@ -101,55 +101,49 @@ func modelGetParseToInterface(reply interface{}, model ModelInterface) (err erro
 func modelGetParseReply(reply interface{}) (err error, backend string, device string, tag string, blob []byte, batchsize int64, minbatchsize int64, inputs []string, outputs []string) {
 	var replySlice []interface{}
 	var key string
+	inputs = nil
+	outputs = nil
 	replySlice, err = redis.Values(reply, err)
 	if err != nil {
 		return
 	}
 	for pos := 0; pos < len(replySlice); pos += 2 {
+		// we need this condition for after parsing err check
+		if err != nil {
+			break
+		}
 		key, err = redis.String(replySlice[pos], err)
 		if err != nil {
-			return
+			break
 		}
 		switch key {
 		case "backend":
 			backend, err = redis.String(replySlice[pos+1], err)
-			if err != nil {
-				return
-			}
 		case "device":
 			device, err = redis.String(replySlice[pos+1], err)
-			if err != nil {
-				return
-			}
 		case "blob":
 			blob, err = redis.Bytes(replySlice[pos+1], err)
-			if err != nil {
-				return
-			}
 		case "tag":
 			tag, err = redis.String(replySlice[pos+1], err)
-			if err != nil {
-				return
-			}
 		case "batchsize":
 			batchsize, err = redis.Int64(replySlice[pos+1], err)
-			if err != nil {
-				return
-			}
 		case "minbatchsize":
 			minbatchsize, err = redis.Int64(replySlice[pos+1], err)
-			if err != nil {
-				return
-			}
 		case "inputs":
-			inputs, err = redis.Strings(replySlice[pos+1], err)
-			if err != nil {
-				return
+			// we need to create a temporary slice given redis.Strings creates by default a slice with capacity of the input slice even if it can't be parsed
+			// so the solution is to only use the replied slic of redis.Strings in case of success. Otherwise you can have inputs filled with []string(nil)
+			var temporaryInputs []string
+			temporaryInputs, err = redis.Strings(replySlice[pos+1], err)
+			if err == nil {
+				inputs = temporaryInputs
 			}
 		case "outputs":
-			outputs, err = redis.Strings(replySlice[pos+1], err)
-			if err != nil {
-				return
+			// we need to create a temporary slice given redis.Strings creates by default a slice with capacity of the input slice even if it can't be parsed
+			// so the solution is to only use the replied slic of redis.Strings in case of success. Otherwise you can have inputs filled with []string(nil)
+			var temporaryOutputs []string
+			temporaryOutputs, err = redis.Strings(replySlice[pos+1], err)
+			if err == nil {
+				outputs = temporaryOutputs
 			}
 		}
 	}
