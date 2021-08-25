@@ -131,7 +131,7 @@ func modelGetParseReply(reply interface{}) (err error, backend string, device st
 			minbatchsize, err = redis.Int64(replySlice[pos+1], err)
 		case "inputs":
 			// we need to create a temporary slice given redis.Strings creates by default a slice with capacity of the input slice even if it can't be parsed
-			// so the solution is to only use the replied slic of redis.Strings in case of success. Otherwise you can have inputs filled with []string(nil)
+			// so the solution is to only use the replied slice of redis.Strings in case of success. Otherwise you can have inputs filled with []string(nil)
 			var temporaryInputs []string
 			temporaryInputs, err = redis.Strings(replySlice[pos+1], err)
 			if err == nil {
@@ -139,7 +139,7 @@ func modelGetParseReply(reply interface{}) (err error, backend string, device st
 			}
 		case "outputs":
 			// we need to create a temporary slice given redis.Strings creates by default a slice with capacity of the input slice even if it can't be parsed
-			// so the solution is to only use the replied slic of redis.Strings in case of success. Otherwise you can have inputs filled with []string(nil)
+			// so the solution is to only use the replied slice of redis.Strings in case of success. Otherwise you can have outputs filled with []string(nil)
 			var temporaryOutputs []string
 			temporaryOutputs, err = redis.Strings(replySlice[pos+1], err)
 			if err == nil {
