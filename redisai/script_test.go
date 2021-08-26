@@ -37,24 +37,16 @@ func Test_scriptGetParseReply(t *testing.T) {
 			gotDevice, gotTag, gotSource, gotEntryPoints, gotErr := scriptGetParseReply(tt.args.reply)
 
 			if gotErr != nil && !tt.wantErr {
-
 				t.Errorf("scriptGetParseReply() gotErr = %v, want %v", gotErr, tt.wantErr)
-
 			}
 			if gotDevice != tt.wantDevice {
-
 				t.Errorf("scriptGetParseReply() gotDevice = %v, want %v. gotErr = %v", gotDevice, tt.wantDevice, gotErr)
-
 			}
 			if gotTag != tt.wantTag {
-
 				t.Errorf("scriptGetParseReply() gotTag = %v, want %v. gotErr = %v", gotTag, tt.wantTag, gotErr)
-
 			}
 			if gotSource != tt.wantSource {
-
 				t.Errorf("scriptGetParseReply() gotSource = %v, want %v. gotErr = %v", gotSource, tt.wantSource, gotErr)
-
 			}
 			assert.EqualValues(t, gotEntryPoints, tt.wantEntryPoints, "scriptGetParseReply() gotEntryPoints = %v, want %v. gotErr = %v", gotEntryPoints, tt.wantEntryPoints, gotErr)
 		})
