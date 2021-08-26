@@ -109,10 +109,11 @@ func (c *Client) ModelGet(keyName string) (data []interface{}, err error) {
 	if err != nil || reply == nil {
 		return
 	}
-	err, data[0], data[1], data[2], data[3] = modelGetParseReply(reply)
+	data[0], data[1], data[2], data[3], err = modelGetParseReply(reply)
 	return
 }
 
+// ModelGetToModel gets a RedisAI model from the RedisAI server as ModelInterface
 func (c *Client) ModelGetToModel(keyName string, modelIn ModelInterface) (err error) {
 	args := modelGetFlatArgs(keyName)
 	var reply interface{}
@@ -151,13 +152,39 @@ func (c *Client) ScriptSetWithTag(name string, device string, script_source stri
 	return
 }
 
-func (c *Client) ScriptGet(name string) (data map[string]string, err error) {
-	args := redis.Args{}.Add(name, "META", "SOURCE")
-	respInitial, err := c.DoOrSend("AI.SCRIPTGET", args, nil)
-	if err != nil || respInitial == nil {
+// ScriptSetFromInteface sets a RedisAI script from a structure that implements the ScriptInterface
+func (c *Client) ScriptSetFromInteface(keyName string, script ScriptInterface) (err error) {
+	args := scriptSetInterfaceArgs(keyName, script)
+	_, err = c.DoOrSend("AI.SCRIPTSET", args, nil)
+	return
+}
+
+// ScriptGet gets a RedisAI script from the RedisAI server
+// The reply will an array, containing at
+//    - position 0 the script's device as a String
+//    - position 1 the scripts's tag as a String
+//    - position 2 the script's source code as a String
+//    - position 3 an array containing the script entry point functions
+func (c *Client) ScriptGet(name string) (data []interface{}, err error) {
+	var reply interface{}
+	data = make([]interface{}, 4)
+	args := scriptGetFlatArgs(name)
+	reply, err = c.DoOrSend("AI.SCRIPTGET", args, nil)
+	if err != nil || reply == nil {
 		return
 	}
-	data, err = redis.StringMap(respInitial, err)
+	data[0], data[1], data[2], data[3], err = scriptGetParseReply(reply)
+	return
+}
+
+// ScriptGetToInterface gets a RedisAI script from the RedisAI server as ScriptInterface
+func (c *Client) ScriptGetToInterface(name string, scriptIn ScriptInterface) (err error) {
+	args := scriptGetFlatArgs(name)
+	reply, err := c.DoOrSend("AI.SCRIPTGET", args, nil)
+	if err != nil || reply == nil {
+		return
+	}
+	err = scriptGetParseToInterface(reply, scriptIn)
 	return
 }
 

@@ -87,7 +87,7 @@ func modelGetParseToInterface(reply interface{}, model ModelInterface) (err erro
 	var device string
 	var tag string
 	var blob []byte
-	err, backend, device, tag, blob = modelGetParseReply(reply)
+	backend, device, tag, blob, err = modelGetParseReply(reply)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func modelGetParseToInterface(reply interface{}, model ModelInterface) (err erro
 	return
 }
 
-func modelGetParseReply(reply interface{}) (err error, backend string, device string, tag string, blob []byte) {
+func modelGetParseReply(reply interface{}) (backend string, device string, tag string, blob []byte, err error) {
 	var replySlice []interface{}
 	var key string
 	replySlice, err = redis.Values(reply, err)
