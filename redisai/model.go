@@ -82,7 +82,7 @@ func modelRunFlatArgs(name string, inputTensorNames, outputTensorNames []string)
 }
 
 func modelGetParseToInterface(reply interface{}, model ModelInterface) (err error) {
-	err, backend, device, tag, blob, batchsize, minbatchsize, inputs, outputs := modelGetParseReply(reply)
+	backend, device, tag, blob, batchsize, minbatchsize, inputs, outputs, err := modelGetParseReply(reply)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func modelGetParseToInterface(reply interface{}, model ModelInterface) (err erro
 	return
 }
 
-func modelGetParseReply(reply interface{}) (err error, backend string, device string, tag string, blob []byte, batchsize int64, minbatchsize int64, inputs []string, outputs []string) {
+func modelGetParseReply(reply interface{}) (backend string, device string, tag string, blob []byte, batchsize int64, minbatchsize int64, inputs []string, outputs []string, err error) {
 	var replySlice []interface{}
 	var key string
 	inputs = nil

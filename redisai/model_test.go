@@ -42,7 +42,7 @@ func Test_modelGetParseReply(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotErr, gotBackend, gotDevice, gotTag, gotBlob, gotBatchsize, gotMinbatchsize, gotInputs, gotOutputs := modelGetParseReply(tt.args.reply)
+			gotBackend, gotDevice, gotTag, gotBlob, gotBatchsize, gotMinbatchsize, gotInputs, gotOutputs, gotErr := modelGetParseReply(tt.args.reply)
 			if gotErr != nil && !tt.wantErr {
 				t.Errorf("modelGetParseReply() gotErr = %v, want %v", gotErr, tt.wantErr)
 			}
