@@ -9,7 +9,6 @@ func Test_scriptGetParseReply(t *testing.T) {
 	type args struct {
 		reply interface{}
 	}
-
 	tests := []struct {
 		name            string
 		args            args
@@ -35,30 +34,29 @@ func Test_scriptGetParseReply(t *testing.T) {
 	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
-
 			gotDevice, gotTag, gotSource, gotEntryPoints, gotErr := scriptGetParseReply(tt.args.reply)
 
 			if gotErr != nil && !tt.wantErr {
 
-				t.Errorf("modelGetParseReply() gotErr = %v, want %v", gotErr, tt.wantErr)
+				t.Errorf("scriptGetParseReply() gotErr = %v, want %v", gotErr, tt.wantErr)
 
 			}
 			if gotDevice != tt.wantDevice {
 
-				t.Errorf("modelGetParseReply() gotDevice = %v, want %v. gotErr = %v", gotDevice, tt.wantDevice, gotErr)
+				t.Errorf("scriptGetParseReply() gotDevice = %v, want %v. gotErr = %v", gotDevice, tt.wantDevice, gotErr)
 
 			}
 			if gotTag != tt.wantTag {
 
-				t.Errorf("modelGetParseReply() gotTag = %v, want %v. gotErr = %v", gotTag, tt.wantTag, gotErr)
+				t.Errorf("scriptGetParseReply() gotTag = %v, want %v. gotErr = %v", gotTag, tt.wantTag, gotErr)
 
 			}
 			if gotSource != tt.wantSource {
 
-				t.Errorf("modelGetParseReply() gotSource = %v, want %v. gotErr = %v", gotSource, tt.wantSource, gotErr)
+				t.Errorf("scriptGetParseReply() gotSource = %v, want %v. gotErr = %v", gotSource, tt.wantSource, gotErr)
 
 			}
-			assert.EqualValues(t, gotEntryPoints, tt.wantEntryPoints, "modelGetParseReply() gotEntryPoints = %v, want %v. gotErr = %v", gotEntryPoints, tt.wantEntryPoints, gotErr)
+			assert.EqualValues(t, gotEntryPoints, tt.wantEntryPoints, "scriptGetParseReply() gotEntryPoints = %v, want %v. gotErr = %v", gotEntryPoints, tt.wantEntryPoints, gotErr)
 		})
 	}
 }
