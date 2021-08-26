@@ -16,19 +16,16 @@ type ScriptInterface interface {
 	SetEntryPoints(entryPoinys []string)
 }
 
-func scriptGetParseToInterface(reply interface{}, model ScriptInterface) (err error) {
-	var device string
-	var tag string
-	var source string
-	var entryPoints []string
-	device, tag, source, entryPoints, err = scriptGetParseReply(reply)
+func scriptGetParseToInterface(reply interface{}, script ScriptInterface) (err error) {
+
+	device, tag, source, entryPoints, err := scriptGetParseReply(reply)
 	if err != nil {
 		return err
 	}
-	model.SetDevice(device)
-	model.SetTag(tag)
-	model.SetSource(source)
-	model.SetEntryPoints(entryPoints)
+	script.SetDevice(device)
+	script.SetTag(tag)
+	script.SetSource(source)
+	script.SetEntryPoints(entryPoints)
 	return
 }
 
@@ -61,9 +58,12 @@ func scriptGetParseReply(reply interface{}) (device string, tag string, source s
 				return
 			}
 		case "Entry Points":
-			entryPoints, err = redis.Strings(replySlice[pos+1], err)
-			if err != nil {
-				return
+			// we need to create a temporary slice given redis.Strings creates by default a slice with capacity of the input slice even if it can't be parsed
+			// so the solution is to only use the replied slice of redis.Strings in case of success. Otherwise you can have entryPoints filled with []string(nil)
+			var temporaryEntryPoints []string
+			temporaryEntryPoints, err = redis.Strings(replySlice[pos+1], err)
+			if err == nil {
+				entryPoints = temporaryEntryPoints
 			}
 		}
 	}
