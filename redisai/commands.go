@@ -143,15 +143,15 @@ func (c *Client) ModelRun(name string, inputTensorNames, outputTensorNames []str
 }
 
 // ScriptSet sets a RedisAI script from a blob
-func (c *Client) ScriptSet(name string, device string, script_source string) (err error) {
-	args := ScriptStoreFlatArgs(name, device, "", nil, script_source)
+func (c *Client) ScriptSet(name string, device string, scriptSource string) (err error) {
+	args := ScriptStoreFlatArgs(name, device, "", nil, scriptSource)
 	_, err = c.DoOrSend("AI.SCRIPTSET", args, nil)
 	return
 }
 
 // ScriptSetWithTag sets a RedisAI script from a blob with tag
-func (c *Client) ScriptSetWithTag(name string, device string, script_source string, tag string) (err error) {
-	args := ScriptStoreFlatArgs(name, device, tag, nil, script_source)
+func (c *Client) ScriptSetWithTag(name string, device string, scriptSource string, tag string) (err error) {
+	args := ScriptStoreFlatArgs(name, device, tag, nil, scriptSource)
 	_, err = c.DoOrSend("AI.SCRIPTSET", args, nil)
 	return
 }
@@ -163,21 +163,21 @@ func (c *Client) ScriptSetFromInteface(keyName string, script ScriptInterface) (
 	return
 }
 
-// ScriptSet sets a RedisAI script from a blob
-func (c *Client) ScriptStore(name string, device string, entryPoints []string, script_source string) (err error) {
-	args := ScriptStoreFlatArgs(name, device, "", entryPoints, script_source)
+// ScriptStore store a TorchScript as the value of a key.
+func (c *Client) ScriptStore(name string, device string, entryPoints []string, scriptSource string) (err error) {
+	args := ScriptStoreFlatArgs(name, device, "", entryPoints, scriptSource)
 	_, err = c.DoOrSend("AI.SCRIPTSTORE", args, nil)
 	return
 }
 
-// ScriptSetWithTag sets a RedisAI script from a blob with tag
-func (c *Client) ScriptStoreWithTag(name string, device string, entryPoints []string, script_source string, tag string) (err error) {
-	args := ScriptStoreFlatArgs(name, device, tag, entryPoints, script_source)
+// ScriptStoreWithTag store a TorchScript as the value of a key with tag.
+func (c *Client) ScriptStoreWithTag(name string, device string, entryPoints []string, scriptSource string, tag string) (err error) {
+	args := ScriptStoreFlatArgs(name, device, tag, entryPoints, scriptSource)
 	_, err = c.DoOrSend("AI.SCRIPTSTORE", args, nil)
 	return
 }
 
-// ScriptSetFromInteface sets a RedisAI script from a structure that implements the ScriptInterface
+// ScriptStoreFromInteface store a TorchScript as the value from a structure that implements the ScriptInterface
 func (c *Client) ScriptStoreFromInteface(keyName string, script ScriptInterface) (err error) {
 	args := scriptStoreInterfaceArgs(keyName, script)
 	_, err = c.DoOrSend("AI.SCRIPTSTORE", args, nil)
