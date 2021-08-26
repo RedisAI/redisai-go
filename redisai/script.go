@@ -37,6 +37,10 @@ func scriptGetParseReply(reply interface{}) (device string, tag string, source s
 		return
 	}
 	for pos := 0; pos < len(replySlice); pos += 2 {
+		// we need this condition for after parsing err check
+		if err != nil {
+			break
+		}
 		key, err = redis.String(replySlice[pos], err)
 		if err != nil {
 			return
@@ -44,19 +48,10 @@ func scriptGetParseReply(reply interface{}) (device string, tag string, source s
 		switch key {
 		case "device":
 			device, err = redis.String(replySlice[pos+1], err)
-			if err != nil {
-				return
-			}
 		case "tag":
 			tag, err = redis.String(replySlice[pos+1], err)
-			if err != nil {
-				return
-			}
 		case "source":
 			source, err = redis.String(replySlice[pos+1], err)
-			if err != nil {
-				return
-			}
 		case "Entry Points":
 			// we need to create a temporary slice given redis.Strings creates by default a slice with capacity of the input slice even if it can't be parsed
 			// so the solution is to only use the replied slice of redis.Strings in case of success. Otherwise you can have entryPoints filled with []string(nil)
