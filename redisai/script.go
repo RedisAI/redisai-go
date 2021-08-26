@@ -80,7 +80,7 @@ func ScriptStoreFlatArgs(keyName, device, tag string, entryPoints []string, sour
 		args = args.Add("TAG", tag)
 	}
 	if len(entryPoints) > 0 {
-		args = args.Add("ENTRY_POINTS").AddFlat(entryPoints)
+		args = args.Add("ENTRY_POINTS").Add(len(entryPoints)).AddFlat(entryPoints)
 	}
 	args = args.Add("SOURCE", source)
 	return args

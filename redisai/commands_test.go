@@ -1,17 +1,17 @@
 package redisai
 
 import (
+	"io/ioutil"
+	"reflect"
+	"testing"
+
 	"github.com/RedisAI/redisai-go/redisai/implementations"
 	"github.com/gomodule/redigo/redis"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"reflect"
-	"testing"
 )
 
-var script string = `
-def bar(tensors: List[Tensor], keys: List[str], args: List[str]):
+var script string = `def bar(tensors: List[Tensor], keys: List[str], args: List[str]):
 	a = tensors[0]
 	b = tensors[1]
 	return a + b
@@ -641,7 +641,7 @@ func TestCommand_ModelRun(t *testing.T) {
 }
 
 func TestCommand_FullFromModelFlow(t *testing.T) {
-	model := implementations.NewModel("TF", "CPU")
+	model := implementations.NewModel(BackendTF, DeviceCPU)
 	model.SetInputs([]string{"transaction", "reference"})
 	model.SetOutputs([]string{"output"})
 	client := createTestClient()
@@ -887,6 +887,63 @@ func TestCommand_ScriptSet(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCommand_ScriptStore(t *testing.T) {
+	keyScriptError := "test:ScriptStore:Error:1"
+	scriptBin := "import abc"
+	tag := "bar"
+
+	type args struct {
+		name        string
+		device      string
+		data        string
+		entryPoints []string
+		tag         string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{keyScriptError, args{keyScriptError, DeviceCPU, scriptBin, nil, tag}, true},
+		{keyScriptError, args{keyScriptError, DeviceCPU, scriptBin, []string{}, tag}, true},
+		{keyScriptError, args{keyScriptError, DeviceCPU, scriptBin, []string{"foo"}, tag}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := createTestClient()
+			if err := c.ScriptStore(tt.args.name, tt.args.device, tt.args.entryPoints, tt.args.data); (err != nil) != tt.wantErr {
+				t.Errorf("ScriptSet() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+		t.Run(tt.name, func(t *testing.T) {
+			c := createTestClient()
+			if err := c.ScriptStoreWithTag(tt.args.name, tt.args.device, tt.args.entryPoints, tt.args.data, tt.args.tag); (err != nil) != tt.wantErr {
+				t.Errorf("ScriptSet() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestCommand_ScriptStoreFromInteface(t *testing.T) {
+	client := createTestClient()
+	client.Flush()
+
+	scriptInteface := implementations.NewScript(DeviceCPU)
+	scriptInteface.SetSource(script)
+	scriptInteface.SetEntryPoints([]string{"bar", "bar_variadic"})
+	err := client.ScriptStoreFromInteface("financialNetScript", scriptInteface)
+	assert.Nil(t, err)
+	scriptInteface.SetTag("financialTag")
+	err = client.ScriptStoreFromInteface("financialNetScript1", scriptInteface)
+	assert.Nil(t, err)
+	scriptInteface1 := implementations.NewEmptyScript()
+	err = client.ScriptGetToInterface("financialNetScript1", scriptInteface1)
+	assert.Nil(t, err)
+	assert.Equal(t, scriptInteface.Device(), scriptInteface1.Device())
+	assert.Equal(t, scriptInteface.Tag(), scriptInteface1.Tag())
+	assert.Equal(t, scriptInteface.EntryPoints(), scriptInteface1.EntryPoints())
 }
 
 func TestCommand_LoadBackend(t *testing.T) {
