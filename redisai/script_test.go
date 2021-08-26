@@ -52,3 +52,24 @@ func Test_scriptGetParseReply(t *testing.T) {
 		})
 	}
 }
+
+func Test_scriptGetParseToInterface(t *testing.T) {
+	type args struct {
+		reply interface{}
+		model ScriptInterface
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"negative-wrong-reply", args{[]interface{}{[]interface{}{[]byte("serie 1"), []interface{}{}, []interface{}{[]interface{}{[]byte("AA"), []byte("1")}}}}, nil}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := scriptGetParseToInterface(tt.args.reply, tt.args.model); (err != nil) != tt.wantErr {
+				t.Errorf("scriptGetParseToInterface() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
