@@ -794,10 +794,12 @@ func TestCommand_ScriptRun(t *testing.T) {
 	keyScript2 := "test:ScriptRun:2:Pipelined"
 	keyScript3Empty := "test:ScriptRun:3:Empty"
 	scriptBin := "def bar(a, b):\n    return a + b\n"
+	tag := "bar"
 	simpleClient := Connect("", createPool())
 
 	scriptInterface := implementations.NewEmptyScript()
 	scriptInterface.SetDevice(DeviceCPU)
+	scriptInterface.SetTag(tag)
 	scriptInterface.SetSource(scriptBin)
 	err := simpleClient.ScriptSetFromInteface(keyScript1, scriptInterface)
 	if err != nil {
