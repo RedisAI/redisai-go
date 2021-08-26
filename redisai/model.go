@@ -71,8 +71,7 @@ func modelSetInterfaceArgs(keyName string, modelInterface ModelInterface) redis.
 }
 
 func modelRunFlatArgs(name string, inputTensorNames, outputTensorNames []string) redis.Args {
-	args := redis.Args{}
-	args = args.Add(name)
+	args := redis.Args{name}
 	if len(inputTensorNames) > 0 {
 		args = args.Add("INPUTS").AddFlat(inputTensorNames)
 	}

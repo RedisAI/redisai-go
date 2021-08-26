@@ -26,12 +26,19 @@ func Test_modelGetParseReply(t *testing.T) {
 		{"empty", args{}, "", "", "", nil, 0, 0, nil, nil, true},
 		{"negative-wrong-reply", args{[]interface{}{[]interface{}{[]byte("serie 1"), []interface{}{}, []interface{}{[]interface{}{[]byte("AA"), []byte("1")}}}}}, "", "", "", nil, 0, 0, nil, nil, true},
 		{"negative-wrong-reply", args{[]interface{}{[]byte("dtype"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-backend", args{[]interface{}{[]byte("backend"), []byte("TF")}}, "TF", "", "", nil, 0, 0, nil, nil, false},
 		{"negative-wrong-device", args{[]interface{}{[]byte("device"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
-		{"negative-wrong-blob", args{[]interface{}{[]byte("blob"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-device", args{[]interface{}{[]byte("device"), []byte(DeviceGPU)}}, "", DeviceGPU, "", nil, 0, 0, nil, nil, false},
 		{"negative-wrong-batchsize", args{[]interface{}{[]byte("batchsize"), []interface{}{[]byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-batchsize", args{[]interface{}{[]byte("batchsize"), int64(1)}}, "", "", "", nil, 1, 0, nil, nil, false},
 		{"negative-wrong-minbatchsize", args{[]interface{}{[]byte("minbatchsize"), []interface{}{[]byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-minbatchsize", args{[]interface{}{[]byte("minbatchsize"), int64(1)}}, "", "", "", nil, 0, 1, nil, nil, false},
 		{"negative-wrong-inputs", args{[]interface{}{[]byte("inputs"), []interface{}{[]interface{}{[]byte("bar"), []byte("foo")}}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-inputs", args{[]interface{}{[]byte("inputs"), []interface{}{[]byte("bar"), []byte("foo")}}}, "", "", "", nil, 0, 0, []string{"bar", "foo"}, nil, false},
 		{"negative-wrong-output", args{[]interface{}{[]byte("output"), []interface{}{[]interface{}{[]byte("output")}}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-output", args{[]interface{}{[]byte("outputs"), []interface{}{[]byte("output")}}}, "", "", "", nil, 0, 0, nil, []string{"output"}, false},
+		{"negative-wrong-blob", args{[]interface{}{[]byte("blob"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-blob", args{[]interface{}{[]byte("blob"), []byte("blob")}}, "", "", "", []byte("blob"), 0, 0, nil, nil, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

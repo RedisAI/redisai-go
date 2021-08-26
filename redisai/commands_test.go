@@ -499,38 +499,24 @@ func TestCommand_ModelGet(t *testing.T) {
 				if !reflect.DeepEqual(gotData[0], tt.wantBackend) {
 					t.Errorf("ModelGet() gotBackend = %v, want %v. gotBackend Type %v, want Type %v.", gotData[0], tt.wantBackend, reflect.TypeOf(gotData[0]), reflect.TypeOf(tt.wantBackend))
 				}
-			}
-			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[1], tt.wantDevice) {
 					t.Errorf("ModelGet() gotDevice = %v, want %v. gotDevice Type %v, want Type %v.", gotData[1], tt.wantDevice, reflect.TypeOf(gotData[1]), reflect.TypeOf(tt.wantDevice))
 				}
-			}
-			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[2], tt.wantTag) {
 					t.Errorf("ModelGet() gotTag = %v, want %v. gotTag Type %v, want Type %v.", gotData[2], tt.wantTag, reflect.TypeOf(gotData[2]), reflect.TypeOf(tt.wantTag))
 				}
-			}
-			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[3], tt.wantData) {
 					t.Errorf("ModelGet() gotData = %v, want %v. gotData Type %v, want Type %v.", gotData[3], tt.wantData, reflect.TypeOf(gotData[3]), reflect.TypeOf(tt.wantData))
 				}
-			}
-			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[4], tt.wantBatchsize) {
 					t.Errorf("ModelGet() gotBatchsize = %v, want %v. gotBatchsize Type %v, want Type %v.", gotData[4], tt.wantBatchsize, reflect.TypeOf(gotData[4]), reflect.TypeOf(tt.wantBatchsize))
 				}
-			}
-			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[5], tt.wantMinbatchsize) {
 					t.Errorf("ModelGet() gotMinbatchsize = %v, want %v. gotMinbatchsize Type %v, want Type %v.", gotData[5], tt.wantMinbatchsize, reflect.TypeOf(gotData[5]), reflect.TypeOf(tt.wantMinbatchsize))
 				}
-			}
-			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[6], tt.wantInputs) {
 					t.Errorf("ModelGet() gotInputs = %v, want %v. gotInputs Type %v, want Type %v.", gotData[6], tt.wantInputs, reflect.TypeOf(gotData[6]), reflect.TypeOf(tt.wantInputs))
 				}
-			}
-			if !tt.wantErr {
 				if !reflect.DeepEqual(gotData[7], tt.wantOutputs) {
 					t.Errorf("ModelGet() gotOutputs = %v, want %v. gotOutputs Type %v, want Type %v.", gotData[7], tt.wantOutputs, reflect.TypeOf(gotData[7]), reflect.TypeOf(tt.wantOutputs))
 				}
