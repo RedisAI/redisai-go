@@ -25,10 +25,20 @@ type ModelInterface interface {
 	SetMinBatchSize(minBatchSize int64)
 }
 
-func modelSetFlatArgs(keyName, backend, device, tag string, inputs, outputs []string, blob []byte) redis.Args {
+func modelSetInterfaceArgs(keyName string, modelInterface ModelInterface) redis.Args {
+	return modelSetFlatArgs(keyName, modelInterface.Backend(), modelInterface.Device(), modelInterface.Tag(), modelInterface.BatchSize(), modelInterface.MinBatchSize(), modelInterface.Inputs(), modelInterface.Outputs(), modelInterface.Blob())
+}
+
+func modelSetFlatArgs(keyName, backend, device, tag string, batchsize, minbatchsize int64, inputs, outputs []string, blob []byte) redis.Args {
 	args := redis.Args{}.Add(keyName, backend, device)
 	if len(tag) > 0 {
 		args = args.Add("TAG", tag)
+	}
+	if batchsize > 0 {
+		args = args.Add("BATCHSIZE", batchsize)
+		if minbatchsize > 0 {
+			args = args.Add("MINBATCHSIZE", minbatchsize)
+		}
 	}
 	if len(inputs) > 0 {
 		args = args.Add("INPUTS").AddFlat(inputs)
@@ -38,35 +48,6 @@ func modelSetFlatArgs(keyName, backend, device, tag string, inputs, outputs []st
 	}
 	args = args.Add("BLOB")
 	args = args.Add(blob)
-	return args
-}
-
-func modelSetInterfaceArgs(keyName string, modelInterface ModelInterface) redis.Args {
-	args := redis.Args{keyName}
-	if len(modelInterface.Backend()) > 0 {
-		args = args.Add(modelInterface.Backend())
-	}
-	if len(modelInterface.Device()) > 0 {
-		args = args.Add(modelInterface.Device())
-	}
-	if len(modelInterface.Tag()) > 0 {
-		args = args.Add("TAG", modelInterface.Tag())
-	}
-	if modelInterface.BatchSize() > 0 {
-		args = args.Add("BATCHSIZE", modelInterface.BatchSize())
-		if modelInterface.MinBatchSize() > 0 {
-			args = args.Add("MINBATCHSIZE", modelInterface.MinBatchSize())
-		}
-	}
-	if len(modelInterface.Inputs()) > 0 {
-		args = args.Add("INPUTS").AddFlat(modelInterface.Inputs())
-	}
-	if len(modelInterface.Outputs()) > 0 {
-		args = args.Add("OUTPUTS").AddFlat(modelInterface.Outputs())
-	}
-	if modelInterface.Blob() != nil {
-		args = args.Add("BLOB", modelInterface.Blob())
-	}
 	return args
 }
 

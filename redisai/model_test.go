@@ -26,7 +26,7 @@ func Test_modelGetParseReply(t *testing.T) {
 		{"empty", args{}, "", "", "", nil, 0, 0, nil, nil, true},
 		{"negative-wrong-reply", args{[]interface{}{[]interface{}{[]byte("serie 1"), []interface{}{}, []interface{}{[]interface{}{[]byte("AA"), []byte("1")}}}}}, "", "", "", nil, 0, 0, nil, nil, true},
 		{"negative-wrong-reply", args{[]interface{}{[]byte("dtype"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
-		{"positive-backend", args{[]interface{}{[]byte("backend"), []byte("TF")}}, "TF", "", "", nil, 0, 0, nil, nil, false},
+		{"positive-backend", args{[]interface{}{[]byte("backend"), []byte(BackendTF)}}, BackendTF, "", "", nil, 0, 0, nil, nil, false},
 		{"negative-wrong-device", args{[]interface{}{[]byte("device"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
 		{"positive-device", args{[]interface{}{[]byte("device"), []byte(DeviceGPU)}}, "", DeviceGPU, "", nil, 0, 0, nil, nil, false},
 		{"negative-wrong-batchsize", args{[]interface{}{[]byte("batchsize"), []interface{}{[]byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
