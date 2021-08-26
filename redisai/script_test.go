@@ -32,7 +32,6 @@ func Test_scriptGetParseReply(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-
 		t.Run(tt.name, func(t *testing.T) {
 			gotDevice, gotTag, gotSource, gotEntryPoints, gotErr := scriptGetParseReply(tt.args.reply)
 
@@ -55,8 +54,8 @@ func Test_scriptGetParseReply(t *testing.T) {
 
 func Test_scriptGetParseToInterface(t *testing.T) {
 	type args struct {
-		reply interface{}
-		model ScriptInterface
+		reply  interface{}
+		script ScriptInterface
 	}
 	tests := []struct {
 		name    string
@@ -67,7 +66,7 @@ func Test_scriptGetParseToInterface(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := scriptGetParseToInterface(tt.args.reply, tt.args.model); (err != nil) != tt.wantErr {
+			if err := scriptGetParseToInterface(tt.args.reply, tt.args.script); (err != nil) != tt.wantErr {
 				t.Errorf("scriptGetParseToInterface() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

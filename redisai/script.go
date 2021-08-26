@@ -17,7 +17,6 @@ type ScriptInterface interface {
 }
 
 func scriptGetParseToInterface(reply interface{}, script ScriptInterface) (err error) {
-
 	device, tag, source, entryPoints, err := scriptGetParseReply(reply)
 	if err != nil {
 		return err
