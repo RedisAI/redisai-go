@@ -70,10 +70,10 @@ func scriptGetFlatArgs(name string) redis.Args {
 }
 
 func scriptStoreInterfaceArgs(keyName string, scriptInterface ScriptInterface) redis.Args {
-	return ScriptStoreFlatArgs(keyName, scriptInterface.Device(), scriptInterface.Tag(), scriptInterface.EntryPoints(), scriptInterface.Source())
+	return scriptStoreFlatArgs(keyName, scriptInterface.Device(), scriptInterface.Tag(), scriptInterface.EntryPoints(), scriptInterface.Source())
 }
 
-func ScriptStoreFlatArgs(keyName, device, tag string, entryPoints []string, source string) redis.Args {
+func scriptStoreFlatArgs(keyName, device, tag string, entryPoints []string, source string) redis.Args {
 	args := redis.Args{keyName}
 	args = args.Add(device)
 	if len(tag) > 0 {
