@@ -1,6 +1,7 @@
 package redisai
 
 import (
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 )
@@ -10,37 +11,60 @@ func Test_modelGetParseReply(t *testing.T) {
 		reply interface{}
 	}
 	tests := []struct {
-		name        string
-		args        args
-		wantBackend string
-		wantDevice  string
-		wantTag     string
-		wantBlob    []byte
-		wantErr     bool
+		name             string
+		args             args
+		wantBackend      string
+		wantDevice       string
+		wantTag          string
+		wantBlob         []byte
+		wantBatchsize    int64
+		wantMinbatchsize int64
+		wantInputs       []string
+		wantOutputs      []string
+		wantErr          bool
 	}{
-		{"empty", args{}, "", "", "", nil, true},
-		{"negative-wrong-reply", args{[]interface{}{[]interface{}{[]byte("serie 1"), []interface{}{}, []interface{}{[]interface{}{[]byte("AA"), []byte("1")}}}}}, "", "", "", nil, true},
-		{"negative-wrong-reply", args{[]interface{}{[]byte("dtype"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, true},
-		{"negative-wrong-device", args{[]interface{}{[]byte("device"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, true},
-		{"negative-wrong-blob", args{[]interface{}{[]byte("blob"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, true},
+		{"empty", args{}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"negative-wrong-reply", args{[]interface{}{[]interface{}{[]byte("serie 1"), []interface{}{}, []interface{}{[]interface{}{[]byte("AA"), []byte("1")}}}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"negative-wrong-reply", args{[]interface{}{[]byte("dtype"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-backend", args{[]interface{}{[]byte("backend"), []byte("TF")}}, "TF", "", "", nil, 0, 0, nil, nil, false},
+		{"negative-wrong-device", args{[]interface{}{[]byte("device"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-device", args{[]interface{}{[]byte("device"), []byte(DeviceGPU)}}, "", DeviceGPU, "", nil, 0, 0, nil, nil, false},
+		{"negative-wrong-batchsize", args{[]interface{}{[]byte("batchsize"), []interface{}{[]byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-batchsize", args{[]interface{}{[]byte("batchsize"), int64(1)}}, "", "", "", nil, 1, 0, nil, nil, false},
+		{"negative-wrong-minbatchsize", args{[]interface{}{[]byte("minbatchsize"), []interface{}{[]byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-minbatchsize", args{[]interface{}{[]byte("minbatchsize"), int64(1)}}, "", "", "", nil, 0, 1, nil, nil, false},
+		{"negative-wrong-inputs", args{[]interface{}{[]byte("inputs"), []interface{}{[]interface{}{[]byte("bar"), []byte("foo")}}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-inputs", args{[]interface{}{[]byte("inputs"), []interface{}{[]byte("bar"), []byte("foo")}}}, "", "", "", nil, 0, 0, []string{"bar", "foo"}, nil, false},
+		{"negative-wrong-output", args{[]interface{}{[]byte("output"), []interface{}{[]interface{}{[]byte("output")}}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-output", args{[]interface{}{[]byte("outputs"), []interface{}{[]byte("output")}}}, "", "", "", nil, 0, 0, nil, []string{"output"}, false},
+		{"negative-wrong-blob", args{[]interface{}{[]byte("blob"), []interface{}{[]byte("dtype"), []byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-blob", args{[]interface{}{[]byte("blob"), []byte("blob")}}, "", "", "", []byte("blob"), 0, 0, nil, nil, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotBackend, gotDevice, gotTag, gotBlob, gotErr := modelGetParseReply(tt.args.reply)
+			gotBackend, gotDevice, gotTag, gotBlob, gotBatchsize, gotMinbatchsize, gotInputs, gotOutputs, gotErr := modelGetParseReply(tt.args.reply)
 			if gotErr != nil && !tt.wantErr {
 				t.Errorf("modelGetParseReply() gotErr = %v, want %v", gotErr, tt.wantErr)
 			}
 			if gotBackend != tt.wantBackend {
-				t.Errorf("modelGetParseReply() gotBackend = %v, want %v", gotBackend, tt.wantBackend)
+				t.Errorf("modelGetParseReply() gotBackend = %v, want %v. gotErr = %v", gotBackend, tt.wantBackend, gotErr)
 			}
 			if gotDevice != tt.wantDevice {
-				t.Errorf("modelGetParseReply() gotDevice = %v, want %v", gotDevice, tt.wantDevice)
+				t.Errorf("modelGetParseReply() gotDevice = %v, want %v. gotErr = %v", gotDevice, tt.wantDevice, gotErr)
 			}
 			if gotTag != tt.wantTag {
-				t.Errorf("modelGetParseReply() gotTag = %v, want %v", gotTag, tt.wantTag)
+				t.Errorf("modelGetParseReply() gotTag = %v, want %v. gotErr = %v", gotTag, tt.wantTag, gotErr)
 			}
+			if gotBatchsize != tt.wantBatchsize {
+				t.Errorf("modelGetParseReply() gotBatchsize = %v, want %v. gotErr = %v", gotBatchsize, tt.wantBatchsize, gotErr)
+			}
+			if gotMinbatchsize != tt.wantMinbatchsize {
+				t.Errorf("modelGetParseReply() gotMinbatchsize = %v, want %v. gotErr = %v", gotMinbatchsize, tt.wantMinbatchsize, gotErr)
+			}
+			assert.EqualValues(t, gotInputs, tt.wantInputs, "modelGetParseReply() gotInputs = %v, want %v. gotErr = %v", gotInputs, tt.wantInputs, gotErr)
+			assert.EqualValues(t, gotOutputs, tt.wantOutputs, "modelGetParseReply() gotOutputs = %v, want %v. gotErr = %v", gotOutputs, tt.wantOutputs, gotErr)
 			if !reflect.DeepEqual(gotBlob, tt.wantBlob) {
-				t.Errorf("modelGetParseReply() gotBlob = %v, want %v", gotBlob, tt.wantBlob)
+				t.Errorf("modelGetParseReply() gotBlob = %v, want %v. gotErr = %v", gotBlob, tt.wantBlob, gotErr)
 			}
 		})
 	}

@@ -7,6 +7,7 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 GOFMT=$(GOCMD) fmt
+GODOC=godoc
 
 .PHONY: all test coverage
 all: test coverage examples
@@ -48,3 +49,11 @@ test: get
 coverage: get test
 	$(GOTEST) -race -coverprofile=coverage.txt -covermode=atomic ./redisai
 
+godoc:
+	$(GOGET) -u golang.org/x/tools/...
+	echo "Open browser tab on localhost:6060"
+	$(GODOC)
+
+
+fmt:
+	$(GOFMT) ./...
