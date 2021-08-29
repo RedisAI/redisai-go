@@ -184,7 +184,7 @@ func TestClient_Pipeline(t *testing.T) {
 					t.Errorf("PipelinePos was incorrect, got: %d, want: %d.", c.PipelinePos, oldPos+1)
 				}
 			}
-			if 0 != c.PipelinePos {
+			if c.PipelinePos != 0 {
 				t.Errorf("PipelinePos was incorrect, got: %d, want: %d.", c.PipelinePos, 0)
 			}
 			c.Close()
@@ -262,7 +262,7 @@ func TestClient_DisablePipeline(t *testing.T) {
 	if err != nil {
 		t.Errorf("Receive() error = %v", err)
 	}
-	err, _, _, _ = ProcessTensorGetReply(client.Receive())
+	_, _, _, err = ProcessTensorGetReply(client.Receive())
 	if err != nil {
 		t.Errorf("ProcessTensorGetReply() error = %v", err)
 	}

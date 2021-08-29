@@ -78,7 +78,7 @@ func (m *AIModel) SetMinBatchSize(minBatchSize int64) {
 	m.minBatchSize = minBatchSize
 }
 
-func NewModel(backend string, device string) *AIModel {
+func NewModel(backend, device string) *AIModel {
 	return &AIModel{backend: backend, device: device}
 }
 

@@ -66,7 +66,7 @@ func TensorGetTypeStrFromType(dtype reflect.Type) (typestr string, err error) {
 	return
 }
 
-func tensorSetFlatArgs(name string, dt string, dims []int64, data interface{}) (redis.Args, error) {
+func tensorSetFlatArgs(name, dt string, dims []int64, data interface{}) (redis.Args, error) {
 	args := redis.Args{}
 	var err error = nil
 	args = args.Add(name, dt).AddFlat(dims)
@@ -120,7 +120,7 @@ func tensorSetInterfaceArgs(keyName string, tensorInterface TensorInterface) (ar
 }
 
 func tensorGetParseToInterface(reply interface{}, tensor TensorInterface) (err error) {
-	err, _, shape, data := ProcessTensorGetReply(reply, err)
+	_, shape, data,err := ProcessTensorGetReply(reply, err)
 	tensor.SetShape(shape)
 	tensor.SetData(data)
 	return
@@ -148,7 +148,7 @@ func ProcessTensorReplyValues(dtype string, reply interface{}) (data interface{}
 	return data, err
 }
 
-func ProcessTensorGetReply(reply interface{}, errIn error) (err error, dtype string, shape []int64, data interface{}) {
+func ProcessTensorGetReply(reply interface{}, errIn error) (dtype string, shape []int64, data interface{}, err error) {
 	var replySlice []interface{}
 	var key string
 	err = errIn

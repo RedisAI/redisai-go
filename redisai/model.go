@@ -78,7 +78,7 @@ func modelGetParseToInterface(reply interface{}, model ModelInterface) (err erro
 	return
 }
 
-func modelGetParseReply(reply interface{}) (backend string, device string, tag string, blob []byte, batchsize int64, minbatchsize int64, inputs []string, outputs []string, err error) {
+func modelGetParseReply(reply interface{}) (backend, device, tag string, blob []byte, batchsize, minbatchsize int64, inputs, outputs []string, err error) {
 	var replySlice []interface{}
 	var key string
 	inputs = nil

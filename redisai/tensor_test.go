@@ -111,7 +111,7 @@ func TestProcessTensorGetReply(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotErr, gotDtype, gotShape, gotData := ProcessTensorGetReply(tt.args.reply, tt.args.errIn)
+			gotDtype, gotShape, gotData, gotErr := ProcessTensorGetReply(tt.args.reply, tt.args.errIn)
 			if gotErr != nil && !tt.wantErr {
 				t.Errorf("ProcessTensorGetReply() gotErr = %v, want %v", gotErr, tt.wantErr)
 			}

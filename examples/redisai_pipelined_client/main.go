@@ -40,7 +40,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err, dtype, shape, _ := redisai.ProcessTensorGetReply(client.Receive())
+	dtype, shape, _, err := redisai.ProcessTensorGetReply(client.Receive())
 	if err != nil {
 		log.Fatal(err)
 	}

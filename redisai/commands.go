@@ -29,7 +29,7 @@ func (c *Client) TensorGet(name, format string) (data []interface{}, err error) 
 	if err != nil || reply == nil {
 		return
 	}
-	err, data[0], data[1], data[2] = ProcessTensorGetReply(reply, err)
+	data[0], data[1], data[2], err = ProcessTensorGetReply(reply, err)
 	return
 }
 
@@ -52,7 +52,7 @@ func (c *Client) TensorGetValues(name string) (dt string, shape []int64, data in
 	if err != nil || reply == nil {
 		return
 	}
-	err, dt, shape, data = ProcessTensorGetReply(reply, err)
+	dt, shape, data, err = ProcessTensorGetReply(reply, err)
 	return
 }
 
@@ -64,7 +64,7 @@ func (c *Client) TensorGetMeta(name string) (dt string, shape []int64, err error
 	if err != nil || reply == nil {
 		return
 	}
-	err, dt, shape, _ = ProcessTensorGetReply(reply, err)
+	dt, shape, _, err = ProcessTensorGetReply(reply, err)
 	return
 }
 
@@ -76,7 +76,7 @@ func (c *Client) TensorGetBlob(name string) (dt string, shape []int64, data []by
 	if err != nil || reply == nil {
 		return
 	}
-	err, dt, shape, dataInterface := ProcessTensorGetReply(reply, err)
+	dt, shape, dataInterface, err := ProcessTensorGetReply(reply, err)
 	data = dataInterface.([]byte)
 	return
 }
