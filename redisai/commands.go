@@ -164,14 +164,14 @@ func (c *Client) ScriptSetFromInteface(keyName string, script ScriptInterface) (
 }
 
 // ScriptStore store a TorchScript as the value of a key.
-func (c *Client) ScriptStore(name, device string, entryPoints []string, scriptSource string) (err error) {
+func (c *Client) ScriptStore(name, device, scriptSource string, entryPoints []string) (err error) {
 	args := scriptStoreFlatArgs(name, device, "", entryPoints, scriptSource)
 	_, err = c.DoOrSend("AI.SCRIPTSTORE", args, nil)
 	return
 }
 
 // ScriptStoreWithTag store a TorchScript as the value of a key with tag.
-func (c *Client) ScriptStoreWithTag(name, device string, entryPoints []string, scriptSource, tag string) (err error) {
+func (c *Client) ScriptStoreWithTag(name, device, scriptSource string, entryPoints []string, tag string) (err error) {
 	args := scriptStoreFlatArgs(name, device, tag, entryPoints, scriptSource)
 	_, err = c.DoOrSend("AI.SCRIPTSTORE", args, nil)
 	return

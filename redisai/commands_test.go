@@ -913,13 +913,13 @@ func TestCommand_ScriptStore(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := createTestClient()
-			if err := c.ScriptStore(tt.args.name, tt.args.device, tt.args.entryPoints, tt.args.data); (err != nil) != tt.wantErr {
+			if err := c.ScriptStore(tt.args.name, tt.args.device, tt.args.data, tt.args.entryPoints); (err != nil) != tt.wantErr {
 				t.Errorf("ScriptSet() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 		t.Run(tt.name, func(t *testing.T) {
 			c := createTestClient()
-			if err := c.ScriptStoreWithTag(tt.args.name, tt.args.device, tt.args.entryPoints, tt.args.data, tt.args.tag); (err != nil) != tt.wantErr {
+			if err := c.ScriptStoreWithTag(tt.args.name, tt.args.device, tt.args.data, tt.args.entryPoints, tt.args.tag); (err != nil) != tt.wantErr {
 				t.Errorf("ScriptSet() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
