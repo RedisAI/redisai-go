@@ -120,7 +120,7 @@ func tensorSetInterfaceArgs(keyName string, tensorInterface TensorInterface) (ar
 }
 
 func tensorGetParseToInterface(reply interface{}, tensor TensorInterface) (err error) {
-	_, shape, data,err := ProcessTensorGetReply(reply, err)
+	_, shape, data, err := ProcessTensorGetReply(reply, err)
 	tensor.SetShape(shape)
 	tensor.SetData(data)
 	return
