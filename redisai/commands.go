@@ -247,7 +247,7 @@ func (c *Client) ScriptExecuteWithTimeout(name, fn string, keys, inputs, inputAr
 	return
 }
 
-func (c *Client) LoadBackend(backend_identifier string, location string) (err error) {
+func (c *Client) LoadBackend(backend_identifier, location string) (err error) {
 	args := redis.Args{}.Add("LOADBACKEND").Add(backend_identifier).Add(location)
 	_, err = c.DoOrSend("AI.CONFIG", args, nil)
 	return
@@ -285,7 +285,7 @@ func (c *Client) ResetStat(key string) (string, error) {
 }
 
 // Direct acyclic graph of operations to run within RedisAI
-func (c *Client) DagRun(loadKeys []string, persistKeys []string, dagCommandInterface DagCommandInterface) ([]interface{}, error) {
+func (c *Client) DagRun(loadKeys, persistKeys []string, dagCommandInterface DagCommandInterface) ([]interface{}, error) {
 	commandArgs, err := dagCommandInterface.FlatArgs()
 	if err != nil {
 		return nil, err
@@ -307,7 +307,7 @@ func (c *Client) DagRunRO(loadKeys []string, dagCommandInterface DagCommandInter
 }
 
 // AddDagRunArgs for AI.DAGRUN and DAGRUN_RO commands.
-func AddDagRunArgs(loadKeys []string, persistKeys []string, commandArgs redis.Args) redis.Args {
+func AddDagRunArgs(loadKeys, persistKeys []string, commandArgs redis.Args) redis.Args {
 	args := redis.Args{}
 	if loadKeys != nil {
 		args = args.Add("LOAD", len(loadKeys)).AddFlat(loadKeys)

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func getConnectionDetails() (host string, password string) {
+func getConnectionDetails() (host, password string) {
 	value, exists := os.LookupEnv("REDISAI_TEST_HOST")
 	host = "redis://127.0.0.1:6379"
 	password = ""
@@ -32,7 +32,7 @@ func createPool() *redis.Pool {
 	return cpool
 }
 
-func getTLSdetails() (tlsready bool, tls_cert string, tls_key string, tls_cacert string) {
+func getTLSdetails() (tlsready bool, tls_cert, tls_key, tls_cacert string) {
 	tlsready = false
 	value, exists := os.LookupEnv("TLS_CERT")
 	if exists && value != "" {
