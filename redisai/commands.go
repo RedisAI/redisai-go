@@ -233,14 +233,14 @@ func (c *Client) ScriptExecute(name, fn string, inputs, outputs []string) (err e
 	return
 }
 
-// ScriptExecute run an already set script with keys, inputs, input args and outputs
+// ScriptExecuteExpended run an already set script with keys, inputs, input args and outputs
 func (c *Client) ScriptExecuteExpended(name, fn string, keys, inputs, inputArgs, outputs []string) (err error) {
 	args := scriptExecuteFlatArgs(name, fn, keys, inputs, inputArgs, outputs, 0)
 	_, err = c.DoOrSend("AI.SCRIPTEXECUTE", args, nil)
 	return
 }
 
-// ScriptExecute run an already set script with timeout limitation
+// ScriptExecuteWithTimeout run an already set script with timeout limitation
 func (c *Client) ScriptExecuteWithTimeout(name, fn string, keys, inputs, inputArgs, outputs []string, timeout int64) (err error) {
 	args := scriptExecuteFlatArgs(name, fn, keys, inputs, inputArgs, outputs, timeout)
 	_, err = c.DoOrSend("AI.SCRIPTEXECUTE", args, nil)
