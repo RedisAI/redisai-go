@@ -220,9 +220,30 @@ func (c *Client) ScriptDel(name string) (err error) {
 }
 
 // ScriptRun runs a RedisAI script
-func (c *Client) ScriptRun(name string, fn string, inputs []string, outputs []string) (err error) {
+func (c *Client) ScriptRun(name, fn string, inputs, outputs []string) (err error) {
 	args := scriptRunFlatArgs(name, fn, inputs, outputs)
 	_, err = c.DoOrSend("AI.SCRIPTRUN", args, nil)
+	return
+}
+
+// ScriptExecute run an already set script
+func (c *Client) ScriptExecute(name, fn string, inputs, outputs []string) (err error) {
+	args := scriptExecuteFlatArgs(name, fn, nil, inputs, nil, outputs, 0)
+	_, err = c.DoOrSend("AI.SCRIPTEXECUTE", args, nil)
+	return
+}
+
+// ScriptExecute run an already set script with keys, inputs, input args and outputs
+func (c *Client) ScriptExecuteExpended(name, fn string, keys, inputs, inputArgs, outputs []string) (err error) {
+	args := scriptExecuteFlatArgs(name, fn, keys, inputs, inputArgs, outputs, 0)
+	_, err = c.DoOrSend("AI.SCRIPTEXECUTE", args, nil)
+	return
+}
+
+// ScriptExecute run an already set script with timeout limitation
+func (c *Client) ScriptExecuteWithTimeout(name, fn string, keys, inputs, inputArgs, outputs []string, timeout int64) (err error) {
+	args := scriptExecuteFlatArgs(name, fn, keys, inputs, inputArgs, outputs, timeout)
+	_, err = c.DoOrSend("AI.SCRIPTEXECUTE", args, nil)
 	return
 }
 

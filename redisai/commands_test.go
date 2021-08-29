@@ -22,6 +22,24 @@ def bar_variadic(tensors: List[Tensor], keys: List[str], args: List[str]):
 	return a + l[0]
 `
 
+var scriptWithRedisCommands string = `def redis_string_int_to_tensor(redis_value: Any):
+    return torch.tensor(int(str(redis_value)))
+
+def int_set_get(tensors: List[Tensor], keys: List[str], args: List[str]):
+    key = keys[0]
+    value = int(args[0])
+    redis.execute("SET", key, str(value))
+    res = redis.execute("GET", key)
+    return redis_string_int_to_tensor(res)
+
+def func(tensors: List[Tensor], keys: List[str], args: List[str]):
+    redis.execute("SET", keys[0], args[0])
+    a = torch.stack(tensors).sum()
+    b = redis_string_int_to_tensor(redis.execute("GET", keys[0]))
+    redis.execute("DEL", keys[0])
+    return b + a
+`
+
 func TestCommand_TensorSet(t *testing.T) {
 
 	valuesFloat32 := []float32{1.1}
@@ -944,6 +962,60 @@ func TestCommand_ScriptStoreFromInteface(t *testing.T) {
 	assert.Equal(t, scriptInteface.Device(), scriptInteface1.Device())
 	assert.Equal(t, scriptInteface.Tag(), scriptInteface1.Tag())
 	assert.Equal(t, scriptInteface.EntryPoints(), scriptInteface1.EntryPoints())
+}
+
+func TestCommand_ScriptExecute(t *testing.T) {
+	keyScript := "test:myscript"
+	client := createTestClient()
+	client.Flush()
+
+	client.ScriptStore(keyScript, DeviceCPU, script, []string{"bar"})
+	client.TensorSet("a", TypeFloat, []int64{2, 2}, []float32{2, 3, 2, 3})
+	client.TensorSet("b", TypeFloat, []int64{2, 2}, []float32{2, 3, 2, 3})
+	client.ScriptExecute(keyScript, "bar", []string{"a", "b"}, []string{"c"})
+	gotResp, err := client.TensorGet("c", TensorContentTypeValues)
+	assert.Nil(t, err)
+	if diff := cmp.Diff(TypeFloat32, gotResp[0]); diff != "" {
+		t.Errorf("TestCommand_FullFromTensor() mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]int64{2, 2}, gotResp[1]); diff != "" {
+		t.Errorf("TestCommand_FullFromTensor() mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]float32{4, 6, 4, 6}, gotResp[2]); diff != "" {
+		t.Errorf("TestCommand_FullFromTensor() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestCommand_ScriptExecute_RedisCommands(t *testing.T) {
+	client := createTestClient()
+	client.Flush()
+	keyScript := "test:myscript:rediscommands"
+	client.ScriptStore(keyScript, DeviceCPU, scriptWithRedisCommands, []string{"int_set_get", "func"})
+
+	client.ScriptExecuteExpended(keyScript, "int_set_get", []string{"x{1}", "{1}"}, nil, []string{"3"}, []string{"y{1}"})
+	gotResp, err := client.TensorGet("y{1}", TensorContentTypeValues)
+	assert.Nil(t, err)
+	if diff := cmp.Diff(TypeInt64, gotResp[0]); diff != "" {
+		t.Errorf("TestCommand_FullFromTensor() mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]int64{3}, gotResp[2]); diff != "" {
+		t.Errorf("TestCommand_FullFromTensor() mismatch (-want +got):\n%s", diff)
+	}
+
+	client.TensorSet("mytensor1{1}", TypeFloat, []int64{1}, []float32{40})
+	client.TensorSet("mytensor2{1}", TypeFloat, []int64{1}, []float32{10})
+	client.TensorSet("mytensor3{1}", TypeFloat, []int64{1}, []float32{1})
+	client.ScriptExecuteExpended(keyScript, "func", []string{"key{1}"}, []string{"mytensor1{1}", "mytensor2{1}", "mytensor3{1}"}, []string{"3"}, []string{"my_output{1}"})
+	gotResp, err = client.TensorGet("my_output{1}", TensorContentTypeValues)
+	assert.Nil(t, err)
+	if diff := cmp.Diff(TypeFloat, gotResp[0]); diff != "" {
+		t.Errorf("TestCommand_FullFromTensor() mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]float32{54}, gotResp[2]); diff != "" {
+		t.Errorf("TestCommand_FullFromTensor() mismatch (-want +got):\n%s", diff)
+	}
+	reply, _ := client.DoOrSend("GET", redis.Args{"key{1}"}, err)
+	assert.Nil(t, reply)
 }
 
 func TestCommand_LoadBackend(t *testing.T) {
