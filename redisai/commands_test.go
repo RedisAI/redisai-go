@@ -1005,7 +1005,7 @@ func TestCommand_ScriptExecute_RedisCommands(t *testing.T) {
 	client.TensorSet("mytensor1{1}", TypeFloat, []int64{1}, []float32{40})
 	client.TensorSet("mytensor2{1}", TypeFloat, []int64{1}, []float32{10})
 	client.TensorSet("mytensor3{1}", TypeFloat, []int64{1}, []float32{1})
-	client.ScriptExecuteWithTimeout(keyScript, "func", []string{"key{1}"}, []string{"mytensor1{1}", "mytensor2{1}", "mytensor3{1}"}, []string{"3"}, []string{"my_output{1}"}, 2)
+	client.ScriptExecuteWithTimeout(keyScript, "func", []string{"key{1}"}, []string{"mytensor1{1}", "mytensor2{1}", "mytensor3{1}"}, []string{"3"}, []string{"my_output{1}"}, 1000)
 	gotResp, err = client.TensorGet("my_output{1}", TensorContentTypeValues)
 	assert.Nil(t, err)
 	if diff := cmp.Diff(TypeFloat, gotResp[0]); diff != "" {
