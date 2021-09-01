@@ -906,9 +906,11 @@ func TestCommand_ScriptStore(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{keyScriptError, args{keyScriptError, DeviceCPU, scriptBin, nil, tag}, true},
-		{keyScriptError, args{keyScriptError, DeviceCPU, scriptBin, []string{}, tag}, true},
-		{keyScriptError, args{keyScriptError, DeviceCPU, scriptBin, []string{"foo"}, tag}, true},
+		{"no-entrypoints", args{keyScriptError, DeviceCPU, scriptBin, nil, tag}, true},
+		{"no-entrypoints", args{keyScriptError, DeviceCPU, scriptBin, []string{}, tag}, true},
+		{"non-existing-entrypoint", args{keyScriptError, DeviceCPU, scriptBin, []string{"foo"}, tag}, true},
+		{"existing-entrypoint", args{keyScriptError, DeviceCPU, script, []string{"bar"}, ""}, false},
+		{"missing-cuda", args{keyScriptError, DeviceGPU, script, []string{"bar"}, ""}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -926,7 +928,7 @@ func TestCommand_ScriptStore(t *testing.T) {
 	}
 }
 
-func TestCommand_ScriptStoreFromInteface(t *testing.T) {
+func TestCommand_ScriptStoreFromInteface_Flow(t *testing.T) {
 	client := createTestClient()
 	client.Flush()
 

@@ -4,14 +4,15 @@ import "io/ioutil"
 
 //AIModel holds the model proprties
 type AIModel struct {
-	backend      string
-	device       string
-	blob         []byte
-	inputs       []string
-	outputs      []string
-	tag          string
-	batchSize    int64
-	minBatchSize int64
+	backend         string
+	device          string
+	blob            []byte
+	inputs          []string
+	outputs         []string
+	tag             string
+	batchSize       int64
+	minBatchSize    int64
+	minBatchTimeout int64
 }
 
 func (m *AIModel) Outputs() []string {
@@ -76,6 +77,14 @@ func (m *AIModel) MinBatchSize() int64 {
 
 func (m *AIModel) SetMinBatchSize(minBatchSize int64) {
 	m.minBatchSize = minBatchSize
+}
+
+func (m *AIModel) MinBatchTimeout() int64 {
+	return m.minBatchTimeout
+}
+
+func (m *AIModel) SetMinBatchTimeout(minBatchTimeout int64) {
+	m.minBatchTimeout = minBatchTimeout
 }
 
 func NewModel(backend string, device string) *AIModel {
