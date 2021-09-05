@@ -643,29 +643,29 @@ func TestCommand_ModelDel(t *testing.T) {
 	}
 }
 
-func TestCommand_ModelRun(t *testing.T) {
-	keyModel1 := "test:ModelRun:1"
-	keyModel2 := "test:ModelRun:2:Pipelined"
+func TestCommand_ModelExecute(t *testing.T) {
+	keyModel1 := "test:ModelExecute:1"
+	keyModel2 := "test:ModelExecute:2:Pipelined"
 	keyModelWrongInput1 := "test:ModelWrongInput:1"
-	keyTransaction1 := "test:ModelRun:transaction:1"
-	keyReference1 := "test:ModelRun:reference:1"
-	keyOutput1 := "test:ModelRun:output:1"
+	keyTransaction1 := "test:ModelExecute:transaction:1"
+	keyReference1 := "test:ModelExecute:reference:1"
+	keyOutput1 := "test:ModelExecute:output:1"
 
 	data, err := ioutil.ReadFile("./../tests/test_data/creditcardfraud.pb")
 	if err != nil {
-		t.Errorf("Error preparing for ModelRun(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for ModelExecute(), while issuing ModelSet. error = %v", err)
 		return
 	}
 	simpleClient := Connect("", createPool())
 	err = simpleClient.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
 	if err != nil {
-		t.Errorf("Error preparing for ModelRun(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for ModelExecute(), while issuing ModelSet. error = %v", err)
 		return
 	}
 
 	err = simpleClient.ModelSet(keyModel2, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
 	if err != nil {
-		t.Errorf("Error preparing for ModelRun(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for ModelExecute(), while issuing ModelSet. error = %v", err)
 		return
 	}
 
@@ -682,21 +682,29 @@ func TestCommand_ModelRun(t *testing.T) {
 		name    string
 		inputs  []string
 		outputs []string
+		timeout int64
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{keyModel1, args{keyModel1, []string{keyTransaction1, keyReference1}, []string{keyOutput1}}, false},
-		{keyModel2, args{keyModel2, []string{keyTransaction1, keyReference1}, []string{keyOutput1}}, false},
-		{keyModelWrongInput1, args{keyModel1, []string{keyTransaction1}, []string{keyOutput1}}, true},
+		{keyModel1, args{keyModel1, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 0}, false},
+		{keyModel2, args{keyModel2, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 0}, false},
+		{keyModel2, args{keyModel2, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 3}, false},
+		{keyModelWrongInput1, args{keyModel1, []string{keyTransaction1}, []string{keyOutput1}, 0}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client := createTestClient()
 			if err := client.ModelRun(tt.args.name, tt.args.inputs, tt.args.outputs); (err != nil) != tt.wantErr {
 				t.Errorf("ModelRun() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if err := client.ModelExecute(tt.args.name, tt.args.inputs, tt.args.outputs); (err != nil) != tt.wantErr {
+				t.Errorf("ModelExecute() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if err := client.ModelExecuteWithTimeout(tt.args.name, tt.args.inputs, tt.args.outputs, tt.args.timeout); (err != nil) != tt.wantErr {
+				t.Errorf("ModelExecuteWithTimeout() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -1018,7 +1026,7 @@ func TestCommand_ScriptExecute(t *testing.T) {
 	client.ScriptStore(keyScript, DeviceCPU, script, []string{"bar"})
 	client.TensorSet("a", TypeFloat, []int64{2, 2}, []float32{2, 3, 2, 3})
 	client.TensorSet("b", TypeFloat, []int64{2, 2}, []float32{2, 3, 2, 3})
-	client.ScriptExecute(keyScript, "bar", []string{"a", "b"}, []string{"c"})
+	client.ScriptExecute(keyScript, "bar", nil, []string{"a", "b"}, nil, []string{"c"})
 	gotResp, err := client.TensorGet("c", TensorContentTypeValues)
 	assert.Nil(t, err)
 	if diff := cmp.Diff(TypeFloat32, gotResp[0]); diff != "" {
@@ -1038,7 +1046,7 @@ func TestCommand_ScriptExecute_RedisCommands(t *testing.T) {
 	keyScript := "test:myscript:rediscommands"
 	client.ScriptStore(keyScript, DeviceCPU, scriptWithRedisCommands, []string{"int_set_get", "func"})
 
-	client.ScriptExecuteExpended(keyScript, "int_set_get", []string{"x{1}", "{1}"}, nil, []string{"3"}, []string{"y{1}"})
+	client.ScriptExecute(keyScript, "int_set_get", []string{"x{1}", "{1}"}, nil, []string{"3"}, []string{"y{1}"})
 	gotResp, err := client.TensorGet("y{1}", TensorContentTypeValues)
 	assert.Nil(t, err)
 	if diff := cmp.Diff(TypeInt64, gotResp[0]); diff != "" {
@@ -1117,7 +1125,7 @@ func TestCommand_Info(t *testing.T) {
 	assert.Nil(t, err)
 	err = c.TensorSet("b", TypeFloat32, []int64{1}, []float32{4.4})
 	assert.Nil(t, err)
-	err = c.ModelRun(keyModel1, []string{"a", "b"}, []string{"mul"})
+	err = c.ModelExecute(keyModel1, []string{"a", "b"}, []string{"mul"})
 	assert.Nil(t, err)
 	info, _ = c.Info(keyModel1)
 	// one model runs

@@ -67,6 +67,20 @@ func modelRunFlatArgs(name string, inputTensorNames, outputTensorNames []string)
 	return args
 }
 
+func modelExecuteFlatArgs(name string, inputTensorNames, outputTensorNames []string, timeout int64) redis.Args {
+	args := redis.Args{name}
+	if len(inputTensorNames) > 0 {
+		args = args.Add("INPUTS").Add(len(inputTensorNames)).AddFlat(inputTensorNames)
+	}
+	if len(outputTensorNames) > 0 {
+		args = args.Add("OUTPUTS").Add(len(outputTensorNames)).AddFlat(outputTensorNames)
+	}
+	if timeout > 0 {
+		args = args.Add("TIMEOUT").Add(timeout)
+	}
+	return args
+}
+
 func modelGetParseToInterface(reply interface{}, model ModelInterface) (err error) {
 	backend, device, tag, blob, batchsize, minbatchsize, inputs, outputs, err := modelGetParseReply(reply)
 	if err != nil {

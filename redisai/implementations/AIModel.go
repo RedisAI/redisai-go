@@ -79,7 +79,6 @@ func (m *AIModel) SetMinBatchSize(minBatchSize int64) {
 	m.minBatchSize = minBatchSize
 }
 
-
 func (m *AIModel) MinBatchTimeout() int64 {
 	return m.minBatchTimeout
 }

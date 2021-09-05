@@ -150,9 +150,23 @@ func (c *Client) ModelDel(keyName string) (err error) {
 }
 
 // ModelRun runs the model present in the keyName, with the input tensor names, and output tensor names
-func (c *Client) ModelRun(name string, inputTensorNames, outputTensorNames []string) (err error) {
-	args := modelRunFlatArgs(name, inputTensorNames, outputTensorNames)
-	_, err = c.DoOrSend("AI.MODELRUN", args, nil)
+func (c *Client) ModelRun(name string, inputs, outputs []string) (err error) {
+	args := modelExecuteFlatArgs(name, inputs, outputs, 0)
+	_, err = c.DoOrSend("AI.MODELEXECUTE", args, nil)
+	return
+}
+
+// ModelExecute runs the model present in the keyName, with the input tensor names, and output tensor names
+func (c *Client) ModelExecute(name string, inputs, outputs []string) (err error) {
+	args := modelExecuteFlatArgs(name, inputs, outputs, 0)
+	_, err = c.DoOrSend("AI.MODELEXECUTE", args, nil)
+	return
+}
+
+// ModelExecuteWithTimeout runs the model present in the keyName, with the input tensor names, output tensor names and timeout
+func (c *Client) ModelExecuteWithTimeout(name string, inputs, outputs []string, timeout int64) (err error) {
+	args := modelExecuteFlatArgs(name, inputs, outputs, timeout)
+	_, err = c.DoOrSend("AI.MODELEXECUTE", args, nil)
 	return
 }
 
@@ -241,14 +255,7 @@ func (c *Client) ScriptRun(name, fn string, inputs, outputs []string) (err error
 }
 
 // ScriptExecute run an already set script
-func (c *Client) ScriptExecute(name, fn string, inputs, outputs []string) (err error) {
-	args := scriptExecuteFlatArgs(name, fn, nil, inputs, nil, outputs, 0)
-	_, err = c.DoOrSend("AI.SCRIPTEXECUTE", args, nil)
-	return
-}
-
-// ScriptExecuteExpended run an already set script with keys, inputs, input args and outputs
-func (c *Client) ScriptExecuteExpended(name, fn string, keys, inputs, inputArgs, outputs []string) (err error) {
+func (c *Client) ScriptExecute(name, fn string, keys, inputs, inputArgs, outputs []string) (err error) {
 	args := scriptExecuteFlatArgs(name, fn, keys, inputs, inputArgs, outputs, 0)
 	_, err = c.DoOrSend("AI.SCRIPTEXECUTE", args, nil)
 	return
