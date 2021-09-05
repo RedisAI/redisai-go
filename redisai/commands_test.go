@@ -498,6 +498,7 @@ func TestCommand_ModelStore(t *testing.T) {
 	}{
 		{keyModelStore1, args{keyModelStore1, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
 		{keyModelStore1Pipelined, args{keyModelStore1, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelStore1Pipelined, args{keyModelStore1, BackendTF, DeviceCPU, "", 1, 1, 1, data, []string{"transaction", "reference"}, []string{"output"}}, false},
 		{keyModelStoreUnexistant, args{keyModelStoreUnexistant, BackendTF, DeviceCPU, "", 0, 0, 0, dataUnexistant, []string{"transaction", "reference"}, []string{"output"}}, true},
 	}
 	for _, tt := range tests {
