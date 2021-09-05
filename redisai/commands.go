@@ -83,15 +83,29 @@ func (c *Client) TensorGetBlob(name string) (dt string, shape []int64, data []by
 
 // ModelSet sets a RedisAI model from a blob
 func (c *Client) ModelSet(keyName, backend, device string, data []byte, inputs, outputs []string) (err error) {
-	args := modelSetFlatArgs(keyName, backend, device, "", 0, 0, inputs, outputs, data)
-	_, err = c.DoOrSend("AI.MODELSET", args, nil)
+	args := modelStoreFlatArgs(keyName, backend, device, "", 0, 0, 0, inputs, outputs, data)
+	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
 	return
 }
 
 // ModelSet sets a RedisAI model from a structure that implements the ModelInterface
 func (c *Client) ModelSetFromModel(keyName string, model ModelInterface) (err error) {
-	args := modelSetInterfaceArgs(keyName, model)
-	_, err = c.DoOrSend("AI.MODELSET", args, nil)
+	args := modelStoreInterfaceArgs(keyName, model)
+	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
+	return
+}
+
+// ModelStore sets a RedisAI model from a blob
+func (c *Client) ModelStore(keyName, backend, device, tag string, batchsize, minbatchsize, minbatchtimeout int64, inputs, outputs []string, data []byte) (err error) {
+	args := modelStoreFlatArgs(keyName, backend, device, tag, batchsize, minbatchsize, minbatchtimeout, inputs, outputs, data)
+	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
+	return
+}
+
+// ModelStoreFromModel sets a RedisAI model from a structure that implements the ModelInterface
+func (c *Client) ModelStoreFromModel(keyName string, model ModelInterface) (err error) {
+	args := modelStoreInterfaceArgs(keyName, model)
+	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
 	return
 }
 

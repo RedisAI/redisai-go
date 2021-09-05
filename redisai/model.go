@@ -23,13 +23,15 @@ type ModelInterface interface {
 	SetBatchSize(batchSize int64)
 	MinBatchSize() int64
 	SetMinBatchSize(minBatchSize int64)
+	MinBatchTimeout() int64
+	SetMinBatchTimeout(minBatchSize int64)
 }
 
-func modelSetInterfaceArgs(keyName string, modelInterface ModelInterface) redis.Args {
-	return modelSetFlatArgs(keyName, modelInterface.Backend(), modelInterface.Device(), modelInterface.Tag(), modelInterface.BatchSize(), modelInterface.MinBatchSize(), modelInterface.Inputs(), modelInterface.Outputs(), modelInterface.Blob())
+func modelStoreInterfaceArgs(keyName string, modelInterface ModelInterface) redis.Args {
+	return modelStoreFlatArgs(keyName, modelInterface.Backend(), modelInterface.Device(), modelInterface.Tag(), modelInterface.BatchSize(), modelInterface.MinBatchSize(), modelInterface.MinBatchTimeout(), modelInterface.Inputs(), modelInterface.Outputs(), modelInterface.Blob())
 }
 
-func modelSetFlatArgs(keyName, backend, device, tag string, batchsize, minbatchsize int64, inputs, outputs []string, blob []byte) redis.Args {
+func modelStoreFlatArgs(keyName, backend, device, tag string, batchsize, minbatchsize, minbatchtimeout int64, inputs, outputs []string, blob []byte) redis.Args {
 	args := redis.Args{}.Add(keyName, backend, device)
 	if len(tag) > 0 {
 		args = args.Add("TAG", tag)
@@ -38,13 +40,16 @@ func modelSetFlatArgs(keyName, backend, device, tag string, batchsize, minbatchs
 		args = args.Add("BATCHSIZE", batchsize)
 		if minbatchsize > 0 {
 			args = args.Add("MINBATCHSIZE", minbatchsize)
+			if minbatchtimeout > 0 {
+				args = args.Add("MINBATCHTIMEOUT", minbatchtimeout)
+			}
 		}
 	}
 	if len(inputs) > 0 {
-		args = args.Add("INPUTS").AddFlat(inputs)
+		args = args.Add("INPUTS").Add(len(inputs)).AddFlat(inputs)
 	}
 	if len(outputs) > 0 {
-		args = args.Add("OUTPUTS").AddFlat(outputs)
+		args = args.Add("OUTPUTS").Add(len(outputs)).AddFlat(outputs)
 	}
 	args = args.Add("BLOB")
 	args = args.Add(blob)
