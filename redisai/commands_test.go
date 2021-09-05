@@ -702,7 +702,7 @@ func TestCommand_FullFromModelFlow(t *testing.T) {
 	model1.SetBatchSize(3)
 	model1.SetMinBatchSize(1)
 	model1.SetTag("financialTag")
-	err = client.ModelSetFromModel("financialNet1", model1)
+	err = client.ModelStoreFromModel("financialNet1", model1)
 	assert.Nil(t, err)
 	model2 := implementations.NewEmptyModel()
 	err = client.ModelGetToModel("financialNet1", model2)
