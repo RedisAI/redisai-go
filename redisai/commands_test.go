@@ -467,6 +467,49 @@ func TestCommand_ModelSet(t *testing.T) {
 	}
 }
 
+func TestCommand_ModelStore(t *testing.T) {
+
+	keyModelStore1 := "test:ModelStore:1"
+	keyModelStore1Pipelined := "test:ModelStore:2:Pipelined"
+	keyModelStoreUnexistant := "test:ModelStore:3:Unexistant"
+	dataUnexistant := []byte{}
+	data, err := ioutil.ReadFile("./../tests/test_data/creditcardfraud.pb")
+	if err != nil {
+		t.Errorf("Error preparing for ModelStore(), while reading file. error = %v", err)
+		return
+	}
+
+	type args struct {
+		name            string
+		backend         string
+		device          string
+		tag             string
+		batchsize       int64
+		minbatchsize    int64
+		minbatchtimeout int64
+		data            []byte
+		inputs          []string
+		outputs         []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{keyModelStore1, args{keyModelStore1, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelStore1Pipelined, args{keyModelStore1, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelStoreUnexistant, args{keyModelStoreUnexistant, BackendTF, DeviceCPU, "", 0, 0, 0, dataUnexistant, []string{"transaction", "reference"}, []string{"output"}}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := createTestClient()
+			if err := c.ModelStore(tt.args.name, tt.args.backend, tt.args.device, tt.args.tag, tt.args.batchsize, tt.args.minbatchsize, tt.args.minbatchtimeout, tt.args.inputs, tt.args.outputs, tt.args.data); (err != nil) != tt.wantErr {
+				t.Errorf("ModelStore() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestCommand_ModelGet(t *testing.T) {
 	keyModel1 := "test:ModelGetToModel:1"
 	keyModelUnexistent1 := "test:ModelGetUnexistent:1"
