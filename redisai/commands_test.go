@@ -956,7 +956,7 @@ func TestCommand_ScriptStore(t *testing.T) {
 		{"no-entrypoints", args{keyScriptError, DeviceCPU, scriptBin, []string{}, tag}, true},
 		// send non existing function name as entryPoints parameter - fails
 		{"non-existing-entrypoint", args{keyScriptError, DeviceCPU, scriptBin, []string{"foo"}, tag}, true},
-		// send function name as entryPoints parameter 
+		// send function name as entryPoints parameter
 		{"existing-entrypoint", args{keyScriptError, DeviceCPU, script, []string{"bar"}, ""}, false},
 		// use GPU and get an missing cuda error
 		{"missing-cuda", args{keyScriptError, DeviceGPU, script, []string{"bar"}, ""}, true},
