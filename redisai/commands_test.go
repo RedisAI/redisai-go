@@ -644,13 +644,14 @@ func TestCommand_ModelDel(t *testing.T) {
 }
 
 func TestCommand_ModelExecute(t *testing.T) {
+	// test ModelRun, ModelExecute and ModelExecuteWithTimeout 
 	keyModel1 := "test:ModelExecute:1"
 	keyModel2 := "test:ModelExecute:2:Pipelined"
-	keyModelWrongInput1 := "test:ModelWrongInput:1"
 	keyTransaction1 := "test:ModelExecute:transaction:1"
 	keyReference1 := "test:ModelExecute:reference:1"
 	keyOutput1 := "test:ModelExecute:output:1"
 
+	// preparing for execution
 	data, err := ioutil.ReadFile("./../tests/test_data/creditcardfraud.pb")
 	if err != nil {
 		t.Errorf("Error preparing for ModelExecute(), while issuing ModelSet. error = %v", err)
@@ -678,6 +679,8 @@ func TestCommand_ModelExecute(t *testing.T) {
 	if errortsetReference != nil {
 		t.Error(errortsetReference)
 	}
+
+	// execute
 	type args struct {
 		name    string
 		inputs  []string
@@ -689,10 +692,10 @@ func TestCommand_ModelExecute(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{keyModel1, args{keyModel1, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 0}, false},
-		{keyModel2, args{keyModel2, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 0}, false},
-		{keyModel2, args{keyModel2, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 3}, false},
-		{keyModelWrongInput1, args{keyModel1, []string{keyTransaction1}, []string{keyOutput1}, 0}, true},
+		{"Model1", args{keyModel1, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 0}, false},
+		{"Model2", args{keyModel2, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 0}, false},
+		{"Model2-with-timeout", args{keyModel2, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 3}, false},
+		{"WrongInput", args{keyModel1, []string{keyTransaction1}, []string{keyOutput1}, 0}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1019,15 +1022,19 @@ func TestCommand_ScriptStoreFromInteface_Flow(t *testing.T) {
 }
 
 func TestCommand_ScriptExecute(t *testing.T) {
+	// execute script using ScriptExecute
 	keyScript := "test:myscript"
+	keyOutput := "myOutput"
 	client := createTestClient()
 	client.Flush()
 
+	// preparing for execution
 	client.ScriptStore(keyScript, DeviceCPU, script, []string{"bar"})
 	client.TensorSet("a", TypeFloat, []int64{2, 2}, []float32{2, 3, 2, 3})
 	client.TensorSet("b", TypeFloat, []int64{2, 2}, []float32{2, 3, 2, 3})
-	client.ScriptExecute(keyScript, "bar", nil, []string{"a", "b"}, nil, []string{"c"})
-	gotResp, err := client.TensorGet("c", TensorContentTypeValues)
+	// execute and test the result in the output
+	client.ScriptExecute(keyScript, "bar", nil, []string{"a", "b"}, nil, []string{keyOutput})
+	gotResp, err := client.TensorGet(keyOutput, TensorContentTypeValues)
 	assert.Nil(t, err)
 	if diff := cmp.Diff(TypeFloat32, gotResp[0]); diff != "" {
 		t.Errorf("TestCommand_FullFromTensor() mismatch (-want +got):\n%s", diff)
@@ -1041,11 +1048,13 @@ func TestCommand_ScriptExecute(t *testing.T) {
 }
 
 func TestCommand_ScriptExecute_RedisCommands(t *testing.T) {
+	// test ScriptExecute and ScriptExecuteWithTimeout using a script that comprising redis commands
 	client := createTestClient()
 	client.Flush()
 	keyScript := "test:myscript:rediscommands"
 	client.ScriptStore(keyScript, DeviceCPU, scriptWithRedisCommands, []string{"int_set_get", "func"})
 
+	// execute and test the result in the output
 	client.ScriptExecute(keyScript, "int_set_get", []string{"x{1}", "{1}"}, nil, []string{"3"}, []string{"y{1}"})
 	gotResp, err := client.TensorGet("y{1}", TensorContentTypeValues)
 	assert.Nil(t, err)
@@ -1056,9 +1065,11 @@ func TestCommand_ScriptExecute_RedisCommands(t *testing.T) {
 		t.Errorf("TestCommand_FullFromTensor() mismatch (-want +got):\n%s", diff)
 	}
 
+	// preparing for execution
 	client.TensorSet("mytensor1{1}", TypeFloat, []int64{1}, []float32{40})
 	client.TensorSet("mytensor2{1}", TypeFloat, []int64{1}, []float32{10})
 	client.TensorSet("mytensor3{1}", TypeFloat, []int64{1}, []float32{1})
+	// execute and test the result in the output
 	client.ScriptExecuteWithTimeout(keyScript, "func", []string{"key{1}"}, []string{"mytensor1{1}", "mytensor2{1}", "mytensor3{1}"}, []string{"3"}, []string{"my_output{1}"}, 1000)
 	gotResp, err = client.TensorGet("my_output{1}", TensorContentTypeValues)
 	assert.Nil(t, err)
