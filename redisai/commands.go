@@ -192,7 +192,7 @@ func (c *Client) ScriptStoreWithTag(name, device, scriptSource string, entryPoin
 }
 
 // ScriptStoreFromInteface store a TorchScript as the value from a structure that implements the ScriptInterface
-func (c *Client) ScriptStoreFromInteface(keyName string, script ScriptInterface) (err error) {
+func (c *Client) ScriptStoreFromInterface(keyName string, script ScriptInterface) (err error) {
 	args := scriptStoreInterfaceArgs(keyName, script)
 	_, err = c.DoOrSend("AI.SCRIPTSTORE", args, nil)
 	return
