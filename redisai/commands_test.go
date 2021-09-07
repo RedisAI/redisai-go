@@ -644,7 +644,7 @@ func TestCommand_ModelDel(t *testing.T) {
 }
 
 func TestCommand_ModelExecute(t *testing.T) {
-	// test ModelRun, ModelExecute and ModelExecuteWithTimeout 
+	// test ModelRun, ModelExecute and ModelExecuteWithTimeout
 	keyModel1 := "test:ModelExecute:1"
 	keyModel2 := "test:ModelExecute:2:Pipelined"
 	keyTransaction1 := "test:ModelExecute:transaction:1"
