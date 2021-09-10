@@ -1,17 +1,17 @@
 package redisai
 
 import (
+	"io/ioutil"
+	"reflect"
+	"testing"
+
 	"github.com/RedisAI/redisai-go/redisai/implementations"
 	"github.com/gomodule/redigo/redis"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"reflect"
-	"testing"
 )
 
-var script string = `
-def bar(tensors: List[Tensor], keys: List[str], args: List[str]):
+var script string = `def bar(tensors: List[Tensor], keys: List[str], args: List[str]):
 	a = tensors[0]
 	b = tensors[1]
 	return a + b
@@ -467,6 +467,50 @@ func TestCommand_ModelSet(t *testing.T) {
 	}
 }
 
+func TestCommand_ModelStore(t *testing.T) {
+
+	keyModelStore1 := "test:ModelStore:1"
+	keyModelStore1Pipelined := "test:ModelStore:2:Pipelined"
+	keyModelStoreUnexistant := "test:ModelStore:3:Unexistant"
+	dataUnexistant := []byte{}
+	data, err := ioutil.ReadFile("./../tests/test_data/creditcardfraud.pb")
+	if err != nil {
+		t.Errorf("Error preparing for ModelStore(), while reading file. error = %v", err)
+		return
+	}
+
+	type args struct {
+		name            string
+		backend         string
+		device          string
+		tag             string
+		batchsize       int64
+		minbatchsize    int64
+		minbatchtimeout int64
+		data            []byte
+		inputs          []string
+		outputs         []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{keyModelStore1, args{keyModelStore1, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelStore1Pipelined, args{keyModelStore1, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelStore1Pipelined, args{keyModelStore1, BackendTF, DeviceCPU, "", 1, 1, 1, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelStoreUnexistant, args{keyModelStoreUnexistant, BackendTF, DeviceCPU, "", 0, 0, 0, dataUnexistant, []string{"transaction", "reference"}, []string{"output"}}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := createTestClient()
+			if err := c.ModelStore(tt.args.name, tt.args.backend, tt.args.device, tt.args.tag, tt.args.batchsize, tt.args.minbatchsize, tt.args.minbatchtimeout, tt.args.inputs, tt.args.outputs, tt.args.data); (err != nil) != tt.wantErr {
+				t.Errorf("ModelStore() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestCommand_ModelGet(t *testing.T) {
 	keyModel1 := "test:ModelGetToModel:1"
 	keyModelUnexistent1 := "test:ModelGetUnexistent:1"
@@ -641,7 +685,7 @@ func TestCommand_ModelRun(t *testing.T) {
 }
 
 func TestCommand_FullFromModelFlow(t *testing.T) {
-	model := implementations.NewModel("TF", "CPU")
+	model := implementations.NewModel(BackendTF, DeviceCPU)
 	model.SetInputs([]string{"transaction", "reference"})
 	model.SetOutputs([]string{"output"})
 	client := createTestClient()
@@ -658,7 +702,7 @@ func TestCommand_FullFromModelFlow(t *testing.T) {
 	model1.SetBatchSize(3)
 	model1.SetMinBatchSize(1)
 	model1.SetTag("financialTag")
-	err = client.ModelSetFromModel("financialNet1", model1)
+	err = client.ModelStoreFromModel("financialNet1", model1)
 	assert.Nil(t, err)
 	model2 := implementations.NewEmptyModel()
 	err = client.ModelGetToModel("financialNet1", model2)
@@ -887,6 +931,70 @@ func TestCommand_ScriptSet(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCommand_ScriptStore(t *testing.T) {
+	keyScriptError := "test:ScriptStore:Error:1"
+	scriptBin := "import abc"
+	tag := "bar"
+
+	type args struct {
+		name        string
+		device      string
+		data        string
+		entryPoints []string
+		tag         string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// send nil as entryPoints parameter - fails
+		{"no-entrypoints", args{keyScriptError, DeviceCPU, scriptBin, nil, tag}, true},
+		// send empty array as entryPoints parameter - fails
+		{"no-entrypoints", args{keyScriptError, DeviceCPU, scriptBin, []string{}, tag}, true},
+		// send non existing function name as entryPoints parameter - fails
+		{"non-existing-entrypoint", args{keyScriptError, DeviceCPU, scriptBin, []string{"foo"}, tag}, true},
+		// send function name as entryPoints parameter
+		{"existing-entrypoint", args{keyScriptError, DeviceCPU, script, []string{"bar"}, ""}, false},
+		// use GPU and get an missing cuda error
+		{"missing-cuda", args{keyScriptError, DeviceGPU, script, []string{"bar"}, ""}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := createTestClient()
+			if err := c.ScriptStore(tt.args.name, tt.args.device, tt.args.data, tt.args.entryPoints); (err != nil) != tt.wantErr {
+				t.Errorf("ScriptSet() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+		t.Run(tt.name, func(t *testing.T) {
+			c := createTestClient()
+			if err := c.ScriptStoreWithTag(tt.args.name, tt.args.device, tt.args.data, tt.args.entryPoints, tt.args.tag); (err != nil) != tt.wantErr {
+				t.Errorf("ScriptSet() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestCommand_ScriptStoreFromInteface_Flow(t *testing.T) {
+	client := createTestClient()
+	client.Flush()
+
+	scriptInteface := implementations.NewScript(DeviceCPU)
+	scriptInteface.SetSource(script)
+	scriptInteface.SetEntryPoints([]string{"bar", "bar_variadic"})
+	err := client.ScriptStoreFromInterface("myscript", scriptInteface)
+	assert.Nil(t, err)
+	scriptInteface.SetTag("{1}")
+	err = client.ScriptStoreFromInterface("mynewscript", scriptInteface)
+	assert.Nil(t, err)
+	scriptInteface1 := implementations.NewEmptyScript()
+	err = client.ScriptGetToInterface("mynewscript", scriptInteface1)
+	assert.Nil(t, err)
+	assert.Equal(t, scriptInteface.Device(), scriptInteface1.Device())
+	assert.Equal(t, scriptInteface.Tag(), scriptInteface1.Tag())
+	assert.Equal(t, scriptInteface.EntryPoints(), scriptInteface1.EntryPoints())
 }
 
 func TestCommand_LoadBackend(t *testing.T) {

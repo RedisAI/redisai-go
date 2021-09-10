@@ -271,5 +271,4 @@ func TestClient_DisablePipeline(t *testing.T) {
 	if err != nil {
 		t.Errorf("DisablePipeline() error = %v", err)
 	}
-
 }

@@ -83,15 +83,29 @@ func (c *Client) TensorGetBlob(name string) (dt string, shape []int64, data []by
 
 // ModelSet sets a RedisAI model from a blob
 func (c *Client) ModelSet(keyName, backend, device string, data []byte, inputs, outputs []string) (err error) {
-	args := modelSetFlatArgs(keyName, backend, device, "", inputs, outputs, data)
-	_, err = c.DoOrSend("AI.MODELSET", args, nil)
+	args := modelStoreFlatArgs(keyName, backend, device, "", 0, 0, 0, inputs, outputs, data)
+	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
 	return
 }
 
 // ModelSet sets a RedisAI model from a structure that implements the ModelInterface
 func (c *Client) ModelSetFromModel(keyName string, model ModelInterface) (err error) {
-	args := modelSetInterfaceArgs(keyName, model)
-	_, err = c.DoOrSend("AI.MODELSET", args, nil)
+	args := modelStoreInterfaceArgs(keyName, model)
+	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
+	return
+}
+
+// ModelStore sets a RedisAI model from a blob
+func (c *Client) ModelStore(keyName, backend, device, tag string, batchsize, minbatchsize, minbatchtimeout int64, inputs, outputs []string, data []byte) (err error) {
+	args := modelStoreFlatArgs(keyName, backend, device, tag, batchsize, minbatchsize, minbatchtimeout, inputs, outputs, data)
+	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
+	return
+}
+
+// ModelStoreFromModel sets a RedisAI model from a structure that implements the ModelInterface
+func (c *Client) ModelStoreFromModel(keyName string, model ModelInterface) (err error) {
+	args := modelStoreInterfaceArgs(keyName, model)
+	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
 	return
 }
 
@@ -143,23 +157,44 @@ func (c *Client) ModelRun(name string, inputTensorNames, outputTensorNames []str
 }
 
 // ScriptSet sets a RedisAI script from a blob
-func (c *Client) ScriptSet(name string, device string, script_source string) (err error) {
-	args := redis.Args{}.Add(name, device, "SOURCE", script_source)
+func (c *Client) ScriptSet(name, device, scriptSource string) (err error) {
+	args := scriptStoreFlatArgs(name, device, "", nil, scriptSource)
 	_, err = c.DoOrSend("AI.SCRIPTSET", args, nil)
 	return
 }
 
 // ScriptSetWithTag sets a RedisAI script from a blob with tag
-func (c *Client) ScriptSetWithTag(name string, device string, script_source string, tag string) (err error) {
-	args := redis.Args{}.Add(name, device, "TAG", tag, "SOURCE", script_source)
+func (c *Client) ScriptSetWithTag(name, device, scriptSource, tag string) (err error) {
+	args := scriptStoreFlatArgs(name, device, tag, nil, scriptSource)
 	_, err = c.DoOrSend("AI.SCRIPTSET", args, nil)
 	return
 }
 
 // ScriptSetFromInteface sets a RedisAI script from a structure that implements the ScriptInterface
 func (c *Client) ScriptSetFromInteface(keyName string, script ScriptInterface) (err error) {
-	args := scriptSetInterfaceArgs(keyName, script)
+	args := scriptStoreInterfaceArgs(keyName, script)
 	_, err = c.DoOrSend("AI.SCRIPTSET", args, nil)
+	return
+}
+
+// ScriptStore store a TorchScript as the value of a key.
+func (c *Client) ScriptStore(name, device, scriptSource string, entryPoints []string) (err error) {
+	args := scriptStoreFlatArgs(name, device, "", entryPoints, scriptSource)
+	_, err = c.DoOrSend("AI.SCRIPTSTORE", args, nil)
+	return
+}
+
+// ScriptStoreWithTag store a TorchScript as the value of a key with tag.
+func (c *Client) ScriptStoreWithTag(name, device, scriptSource string, entryPoints []string, tag string) (err error) {
+	args := scriptStoreFlatArgs(name, device, tag, entryPoints, scriptSource)
+	_, err = c.DoOrSend("AI.SCRIPTSTORE", args, nil)
+	return
+}
+
+// ScriptStoreFromInteface store a TorchScript as the value from a structure that implements the ScriptInterface
+func (c *Client) ScriptStoreFromInterface(keyName string, script ScriptInterface) (err error) {
+	args := scriptStoreInterfaceArgs(keyName, script)
+	_, err = c.DoOrSend("AI.SCRIPTSTORE", args, nil)
 	return
 }
 

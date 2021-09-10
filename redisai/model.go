@@ -23,50 +23,36 @@ type ModelInterface interface {
 	SetBatchSize(batchSize int64)
 	MinBatchSize() int64
 	SetMinBatchSize(minBatchSize int64)
+	MinBatchTimeout() int64
+	SetMinBatchTimeout(minBatchSize int64)
 }
 
-func modelSetFlatArgs(keyName, backend, device, tag string, inputs, outputs []string, blob []byte) redis.Args {
+func modelStoreInterfaceArgs(keyName string, modelInterface ModelInterface) redis.Args {
+	return modelStoreFlatArgs(keyName, modelInterface.Backend(), modelInterface.Device(), modelInterface.Tag(), modelInterface.BatchSize(), modelInterface.MinBatchSize(), modelInterface.MinBatchTimeout(), modelInterface.Inputs(), modelInterface.Outputs(), modelInterface.Blob())
+}
+
+func modelStoreFlatArgs(keyName, backend, device, tag string, batchsize, minbatchsize, minbatchtimeout int64, inputs, outputs []string, blob []byte) redis.Args {
 	args := redis.Args{}.Add(keyName, backend, device)
 	if len(tag) > 0 {
 		args = args.Add("TAG", tag)
 	}
+	if batchsize > 0 {
+		args = args.Add("BATCHSIZE", batchsize)
+		if minbatchsize > 0 {
+			args = args.Add("MINBATCHSIZE", minbatchsize)
+			if minbatchtimeout > 0 {
+				args = args.Add("MINBATCHTIMEOUT", minbatchtimeout)
+			}
+		}
+	}
 	if len(inputs) > 0 {
-		args = args.Add("INPUTS").AddFlat(inputs)
+		args = args.Add("INPUTS").Add(len(inputs)).AddFlat(inputs)
 	}
 	if len(outputs) > 0 {
-		args = args.Add("OUTPUTS").AddFlat(outputs)
+		args = args.Add("OUTPUTS").Add(len(outputs)).AddFlat(outputs)
 	}
 	args = args.Add("BLOB")
 	args = args.Add(blob)
-	return args
-}
-
-func modelSetInterfaceArgs(keyName string, modelInterface ModelInterface) redis.Args {
-	args := redis.Args{keyName}
-	if len(modelInterface.Backend()) > 0 {
-		args = args.Add(modelInterface.Backend())
-	}
-	if len(modelInterface.Device()) > 0 {
-		args = args.Add(modelInterface.Device())
-	}
-	if len(modelInterface.Tag()) > 0 {
-		args = args.Add("TAG", modelInterface.Tag())
-	}
-	if modelInterface.BatchSize() > 0 {
-		args = args.Add("BATCHSIZE", modelInterface.BatchSize())
-		if modelInterface.MinBatchSize() > 0 {
-			args = args.Add("MINBATCHSIZE", modelInterface.MinBatchSize())
-		}
-	}
-	if len(modelInterface.Inputs()) > 0 {
-		args = args.Add("INPUTS").AddFlat(modelInterface.Inputs())
-	}
-	if len(modelInterface.Outputs()) > 0 {
-		args = args.Add("OUTPUTS").AddFlat(modelInterface.Outputs())
-	}
-	if modelInterface.Blob() != nil {
-		args = args.Add("BLOB", modelInterface.Blob())
-	}
 	return args
 }
 
