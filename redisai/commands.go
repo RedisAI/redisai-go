@@ -327,17 +327,58 @@ func (c *Client) DagRunRO(loadKeys []string, dagCommandInterface DagCommandInter
 	return dagCommandInterface.ParseReply(reply, err)
 }
 
+// DagExecute Direct acyclic graph of operations to run within RedisAI
+func (c *Client) DagExecute(loadKeys, persistKeys []string, routing string, timeout int64, dagCommandInterface DagCommandInterface) ([]interface{}, error) {
+	commandArgs, err := dagCommandInterface.FlatArgs()
+	if err != nil {
+		return nil, err
+	}
+	args := AddDagExecuteArgs(loadKeys, persistKeys, routing, timeout, commandArgs)
+	reply, err := c.DoOrSend("AI.DAGEXECUTE", args, nil)
+	return dagCommandInterface.ParseReply(reply, err)
+}
+
+// DagExecuteRO is the read-only variant of DagExecute
+func (c *Client) DagExecuteRO(loadKeys []string, routing string, timeout int64, dagCommandInterface DagCommandInterface) ([]interface{}, error) {
+	commandArgs, err := dagCommandInterface.FlatArgs()
+	if err != nil {
+		return nil, err
+	}
+	args := AddDagExecuteArgs(loadKeys, nil, routing, timeout, commandArgs)
+	reply, err := c.DoOrSend("AI.DAGEXECUTE_RO", args, nil)
+	return dagCommandInterface.ParseReply(reply, err)
+}
+
 // AddDagRunArgs for AI.DAGRUN and DAGRUN_RO commands.
 func AddDagRunArgs(loadKeys, persistKeys []string, commandArgs redis.Args) redis.Args {
 	args := redis.Args{}
 	if loadKeys != nil {
 		args = args.Add("LOAD", len(loadKeys)).AddFlat(loadKeys)
 	}
-
 	if persistKeys != nil {
 		args = args.Add("PERSIST", len(persistKeys)).AddFlat(persistKeys)
 	}
+	if commandArgs != nil {
+		args = args.AddFlat(commandArgs)
+	}
+	return args
+}
 
+// AddDagExecuteArgs for AI.DAGEXECUTE and AI.DAGEXECUTE_RO commands.
+func AddDagExecuteArgs(loadKeys, persistKeys []string, routing string, timeout int64, commandArgs redis.Args) redis.Args {
+	args := redis.Args{}
+	if loadKeys != nil {
+		args = args.Add("LOAD", len(loadKeys)).AddFlat(loadKeys)
+	}
+	if persistKeys != nil {
+		args = args.Add("PERSIST", len(persistKeys)).AddFlat(persistKeys)
+	}
+	if len(routing) > 0 {
+		args = args.Add("ROUTING", routing)
+	}
+	if timeout > 0 {
+		args = args.Add("TIMEOUT", timeout)
+	}
 	if commandArgs != nil {
 		args = args.AddFlat(commandArgs)
 	}
