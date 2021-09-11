@@ -1265,7 +1265,7 @@ func TestCommand_DagRunRO(t *testing.T) {
 	}
 }
 
-func TestCommand_DagExecute(t *testing.T) {
+func TestCommand_DagExecute_withModelExecute(t *testing.T) {
 	c := createTestClient()
 	keyModel1 := "test:DagRun:mymodel:1"
 	data, err := ioutil.ReadFile("./../tests/test_data/graph.pb")
@@ -1330,6 +1330,28 @@ func TestCommand_DagExecute(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCommand_DagExecute_withScriptExecute(t *testing.T) {
+	c := createTestClient()
+	err := c.ScriptStore("myscript{1}", DeviceCPU, scriptWithRedisCommands, []string{"func"})
+	if err != nil {
+		t.Errorf("Error preparing for DagExecute(), while issuing ScriptStore: error = %v", err)
+		return
+	}
+	dag := NewDag().TensorSet("mytensor1{1}", TypeFloat32, []int64{1}, []int64{40}).
+		TensorSet("mytensor2{1}", TypeFloat32, []int64{1}, []int64{10}).
+		TensorSet("mytensor3{1}", TypeFloat32, []int64{1}, []int64{1}).
+		ScriptExecute("myscript{1}", "func", []string{"key{1}"}, []string{"mytensor1{1}", "mytensor2{1}", "mytensor3{1}"}, []string{"3"}, []string{"my_output{1}"}, 0)
+	c.DagExecute(nil, []string{"my_output{1}"}, "{1}", 0, dag)
+
+	values, err := c.TensorGet("my_output{1}", TensorContentTypeValues)
+	if err != nil {
+		t.Errorf("Error while issuing TensorGet after DagExecute. error = %v", err)
+		return
+	}
+	assert.Equal(t, values[0], TypeFloat)
+	assert.Equal(t, values[2], []float32{54})
 }
 
 func TestCommand_DagExecuteRO(t *testing.T) {
