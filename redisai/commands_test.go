@@ -645,11 +645,10 @@ func TestCommand_ModelDel(t *testing.T) {
 
 func TestCommand_ModelExecute(t *testing.T) {
 	// test ModelRun, ModelExecute and ModelExecuteWithTimeout
-	keyModel1 := "test:ModelExecute:1"
-	keyModel2 := "test:ModelExecute:2:Pipelined"
-	keyTransaction1 := "test:ModelExecute:transaction:1"
-	keyReference1 := "test:ModelExecute:reference:1"
-	keyOutput1 := "test:ModelExecute:output:1"
+	keyModel := "test:ModelExecute:1"
+	keyTransaction := "test:ModelExecute:transaction:1"
+	keyReference := "test:ModelExecute:reference:1"
+	keyOutput := "test:ModelExecute:output:1"
 
 	// preparing for execution
 	data, err := ioutil.ReadFile("./../tests/test_data/creditcardfraud.pb")
@@ -658,24 +657,18 @@ func TestCommand_ModelExecute(t *testing.T) {
 		return
 	}
 	simpleClient := Connect("", createPool())
-	err = simpleClient.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
+	err = simpleClient.ModelSet(keyModel, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
 	if err != nil {
 		t.Errorf("Error preparing for ModelExecute(), while issuing ModelSet. error = %v", err)
 		return
 	}
 
-	err = simpleClient.ModelSet(keyModel2, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
-	if err != nil {
-		t.Errorf("Error preparing for ModelExecute(), while issuing ModelSet. error = %v", err)
-		return
-	}
-
-	errortset := simpleClient.TensorSet(keyTransaction1, TypeFloat, []int64{1, 30}, nil)
+	errortset := simpleClient.TensorSet(keyTransaction, TypeFloat, []int64{1, 30}, nil)
 	if errortset != nil {
 		t.Error(errortset)
 	}
 
-	errortsetReference := simpleClient.TensorSet(keyReference1, TypeFloat, []int64{256}, nil)
+	errortsetReference := simpleClient.TensorSet(keyReference, TypeFloat, []int64{256}, nil)
 	if errortsetReference != nil {
 		t.Error(errortsetReference)
 	}
@@ -692,10 +685,9 @@ func TestCommand_ModelExecute(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"Model1", args{keyModel1, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 0}, false},
-		{"Model2", args{keyModel2, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 0}, false},
-		{"Model2-with-timeout", args{keyModel2, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 3}, false},
-		{"WrongInput", args{keyModel1, []string{keyTransaction1}, []string{keyOutput1}, 0}, true},
+		{"Model-basecase", args{keyModel, []string{keyTransaction, keyReference}, []string{keyOutput}, 0}, false},
+		{"Model-withtimeout", args{keyModel, []string{keyTransaction, keyReference}, []string{keyOutput}, 300}, false},
+		{"Model-wronginput", args{keyModel, []string{keyTransaction}, []string{keyOutput}, 0}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

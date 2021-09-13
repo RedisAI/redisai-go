@@ -33,6 +33,8 @@ func Test_modelGetParseReply(t *testing.T) {
 		{"positive-batchsize", args{[]interface{}{[]byte("batchsize"), int64(1)}}, "", "", "", nil, 1, 0, nil, nil, false},
 		{"negative-wrong-minbatchsize", args{[]interface{}{[]byte("minbatchsize"), []interface{}{[]byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
 		{"positive-minbatchsize", args{[]interface{}{[]byte("minbatchsize"), int64(1)}}, "", "", "", nil, 0, 1, nil, nil, false},
+		{"negative-wrong-minbatchtimeout", args{[]interface{}{[]byte("minbatchtimeout"), []interface{}{[]byte("1")}}}, "", "", "", nil, 0, 0, nil, nil, true},
+		{"positive-minbatchtimeout", args{[]interface{}{[]byte("minbatchtimeout"), int64(1)}}, "", "", "", nil, 0, 1, nil, nil, false},
 		{"negative-wrong-inputs", args{[]interface{}{[]byte("inputs"), []interface{}{[]interface{}{[]byte("bar"), []byte("foo")}}}}, "", "", "", nil, 0, 0, nil, nil, true},
 		{"positive-inputs", args{[]interface{}{[]byte("inputs"), []interface{}{[]byte("bar"), []byte("foo")}}}, "", "", "", nil, 0, 0, []string{"bar", "foo"}, nil, false},
 		{"negative-wrong-output", args{[]interface{}{[]byte("output"), []interface{}{[]interface{}{[]byte("output")}}}}, "", "", "", nil, 0, 0, nil, nil, true},
