@@ -97,13 +97,13 @@ func scriptRunFlatArgs(name, fn string, inputs, outputs []string) redis.Args {
 	return args
 }
 
-func scriptExecuteFlatArgs(name, fn string, keys, inputs, inputArgs, outputs []string, timeout int64) redis.Args {
+func scriptExecuteFlatArgs(name, fn string, inputKeys, inputTensors, inputArgs, outputs []string, timeout int64) redis.Args {
 	args := redis.Args{}.Add(name, fn)
-	if len(keys) > 0 {
-		args = args.Add("KEYS").Add(len(keys)).AddFlat(keys)
+	if len(inputKeys) > 0 {
+		args = args.Add("KEYS").Add(len(inputKeys)).AddFlat(inputKeys)
 	}
-	if len(inputs) > 0 {
-		args = args.Add("INPUTS").Add(len(inputs)).AddFlat(inputs)
+	if len(inputTensors) > 0 {
+		args = args.Add("INPUTS").Add(len(inputTensors)).AddFlat(inputTensors)
 	}
 	if len(inputArgs) > 0 {
 		args = args.Add("ARGS").Add(len(inputArgs)).AddFlat(inputArgs)
