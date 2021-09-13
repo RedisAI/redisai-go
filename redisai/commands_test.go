@@ -979,10 +979,15 @@ func TestCommand_ScriptStore(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
+		// send nil as entryPoints parameter - fails
 		{"no-entrypoints", args{keyScriptError, DeviceCPU, scriptBin, nil, tag}, true},
+		// send empty array as entryPoints parameter - fails
 		{"no-entrypoints", args{keyScriptError, DeviceCPU, scriptBin, []string{}, tag}, true},
+		// send non existing function name as entryPoints parameter - fails
 		{"non-existing-entrypoint", args{keyScriptError, DeviceCPU, scriptBin, []string{"foo"}, tag}, true},
+		// send function name as entryPoints parameter
 		{"existing-entrypoint", args{keyScriptError, DeviceCPU, script, []string{"bar"}, ""}, false},
+		// use GPU and get an missing cuda error
 		{"missing-cuda", args{keyScriptError, DeviceGPU, script, []string{"bar"}, ""}, true},
 	}
 	for _, tt := range tests {
@@ -1008,10 +1013,10 @@ func TestCommand_ScriptStoreFromInteface_Flow(t *testing.T) {
 	scriptInteface := implementations.NewScript(DeviceCPU)
 	scriptInteface.SetSource(script)
 	scriptInteface.SetEntryPoints([]string{"bar", "bar_variadic"})
-	err := client.ScriptStoreFromInteface("myscript", scriptInteface)
+	err := client.ScriptStoreFromInterface("myscript", scriptInteface)
 	assert.Nil(t, err)
 	scriptInteface.SetTag("{1}")
-	err = client.ScriptStoreFromInteface("mynewscript", scriptInteface)
+	err = client.ScriptStoreFromInterface("mynewscript", scriptInteface)
 	assert.Nil(t, err)
 	scriptInteface1 := implementations.NewEmptyScript()
 	err = client.ScriptGetToInterface("mynewscript", scriptInteface1)
