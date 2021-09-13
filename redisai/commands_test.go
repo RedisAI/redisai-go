@@ -448,8 +448,8 @@ func TestCommand_TensorGetValues(t *testing.T) {
 
 func TestCommand_ModelSet(t *testing.T) {
 
-	keyModelSet1 := "test:ModelSet:1"
-	keyModelSet1Pipelined := "test:ModelSet:2:Pipelined"
+	keyModelSet := "test:ModelSet:1"
+	keyModelSetPipelined := "test:ModelSet:2:Pipelined"
 	keyModelSetUnexistant := "test:ModelSet:3:Unexistant"
 	dataUnexistant := []byte{}
 	data, err := ioutil.ReadFile("./../tests/test_data/creditcardfraud.pb")
@@ -471,8 +471,8 @@ func TestCommand_ModelSet(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{keyModelSet1, args{keyModelSet1, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"}}, false},
-		{keyModelSet1Pipelined, args{keyModelSet1, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelSet, args{keyModelSet, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelSetPipelined, args{keyModelSet, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"}}, false},
 		{keyModelSetUnexistant, args{keyModelSetUnexistant, BackendTF, DeviceCPU, dataUnexistant, []string{"transaction", "reference"}, []string{"output"}}, true},
 	}
 	for _, tt := range tests {
@@ -487,8 +487,8 @@ func TestCommand_ModelSet(t *testing.T) {
 
 func TestCommand_ModelStore(t *testing.T) {
 
-	keyModelStore1 := "test:ModelStore:1"
-	keyModelStore1Pipelined := "test:ModelStore:2:Pipelined"
+	keyModelStore := "test:ModelStore:1"
+	keyModelStorePipelined := "test:ModelStore:2:Pipelined"
 	keyModelStoreUnexistant := "test:ModelStore:3:Unexistant"
 	dataUnexistant := []byte{}
 	data, err := ioutil.ReadFile("./../tests/test_data/creditcardfraud.pb")
@@ -514,15 +514,43 @@ func TestCommand_ModelStore(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{keyModelStore1, args{keyModelStore1, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
-		{keyModelStore1Pipelined, args{keyModelStore1, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
-		{keyModelStore1Pipelined, args{keyModelStore1, BackendTF, DeviceCPU, "", 1, 1, 1, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelStore, args{keyModelStore, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelStorePipelined, args{keyModelStore, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelStorePipelined, args{keyModelStore, BackendTF, DeviceCPU, "", 1, 1, 1, data, []string{"transaction", "reference"}, []string{"output"}}, false},
 		{keyModelStoreUnexistant, args{keyModelStoreUnexistant, BackendTF, DeviceCPU, "", 0, 0, 0, dataUnexistant, []string{"transaction", "reference"}, []string{"output"}}, true},
+		// use minbatchsize without batchsize
+		{"wrong-args-1", args{keyModelStore, BackendTF, DeviceCPU, "", 0, 1, 0, data, []string{"transaction", "reference"}, []string{"output"}}, true},
+		// use minbatchsize and minbatchtimeout without batchsize
+		{"wrong-args-2", args{keyModelStore, BackendTF, DeviceCPU, "", 0, 1, 1, data, []string{"transaction", "reference"}, []string{"output"}}, true},
+		// use minbatchtimeout without batchsize and without minbatchsize
+		{"wrong-args-3", args{keyModelStore, BackendTF, DeviceCPU, "", 0, 0, 1, data, []string{"transaction", "reference"}, []string{"output"}}, true},
+		// use minbatchtimeout without batchsize
+		{"wrong-args-4", args{keyModelStore, BackendTF, DeviceCPU, "", 1, 0, 1, data, []string{"transaction", "reference"}, []string{"output"}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := createTestClient()
+
+			// test ModelStore
 			if err := c.ModelStore(tt.args.name, tt.args.backend, tt.args.device, tt.args.tag, tt.args.batchsize, tt.args.minbatchsize, tt.args.minbatchtimeout, tt.args.inputs, tt.args.outputs, tt.args.data); (err != nil) != tt.wantErr {
+				t.Errorf("ModelStore() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			// test ModelStoreFromModel and ModelSetFromModel
+			model := implementations.NewEmptyModel()
+			model.SetBackend(tt.args.backend)
+			model.SetDevice(tt.args.device)
+			model.SetTag(tt.args.tag)
+			model.SetBatchSize(tt.args.batchsize)
+			model.SetMinBatchSize(tt.args.minbatchsize)
+			model.SetMinBatchTimeout(tt.args.minbatchtimeout)
+			model.SetInputs(tt.args.inputs)
+			model.SetOutputs(tt.args.outputs)
+			model.SetBlob(tt.args.data)
+			if err := c.ModelStoreFromModel(tt.args.name, model); (err != nil) != tt.wantErr {
+				t.Errorf("ModelStore() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if err := c.ModelSetFromModel(tt.args.name, model); (err != nil) != tt.wantErr {
 				t.Errorf("ModelStore() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -534,33 +562,34 @@ func TestCommand_ModelGet(t *testing.T) {
 	keyModelUnexistent1 := "test:ModelGetUnexistent:1"
 	data, err := ioutil.ReadFile("./../tests/test_data/creditcardfraud.pb")
 	if err != nil {
-		t.Errorf("Error preparing for ModelGetToModel(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for ModelGetToModel(), while issuing ModelStore. error = %v", err)
 		return
 	}
 	simpleClient := createTestClient()
-	err = simpleClient.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
+	err = simpleClient.ModelStore(keyModel1, BackendTF, DeviceCPU, "", 0, 0, 0, []string{"transaction", "reference"}, []string{"output"}, data)
 	if err != nil {
-		t.Errorf("Error preparing for ModelGetToModel(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for ModelGetToModel(), while issuing ModModelStoreelSet. error = %v", err)
 		return
 	}
 	type args struct {
 		name string
 	}
 	tests := []struct {
-		name             string
-		args             args
-		wantBackend      string
-		wantDevice       string
-		wantTag          string
-		wantData         []byte
-		wantBatchsize    int64
-		wantMinbatchsize int64
-		wantInputs       []string
-		wantOutputs      []string
-		wantErr          bool
+		name                string
+		args                args
+		wantBackend         string
+		wantDevice          string
+		wantTag             string
+		wantData            []byte
+		wantBatchsize       int64
+		wantMinbatchsize    int64
+		wantMinbatchtimeout int64
+		wantInputs          []string
+		wantOutputs         []string
+		wantErr             bool
 	}{
-		{keyModelUnexistent1, args{keyModelUnexistent1}, BackendTF, DeviceCPU, "", data, 0, 0, nil, nil, true},
-		{keyModel1, args{keyModel1}, BackendTF, DeviceCPU, "", data, 0, 0, []string{"transaction", "reference"}, []string{"output"}, false},
+		{keyModelUnexistent1, args{keyModelUnexistent1}, BackendTF, DeviceCPU, "", data, 0, 0, 0, nil, nil, true},
+		{keyModel1, args{keyModel1}, BackendTF, DeviceCPU, "", data, 0, 0, 0, []string{"transaction", "reference"}, []string{"output"}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -595,6 +624,9 @@ func TestCommand_ModelGet(t *testing.T) {
 				if !reflect.DeepEqual(gotData[7], tt.wantOutputs) {
 					t.Errorf("ModelGet() gotOutputs = %v, want %v. gotOutputs Type %v, want Type %v.", gotData[7], tt.wantOutputs, reflect.TypeOf(gotData[7]), reflect.TypeOf(tt.wantOutputs))
 				}
+				if !reflect.DeepEqual(gotData[8], tt.wantMinbatchtimeout) {
+					t.Errorf("ModelGet() gotMinbatchtimeout = %v, want %v. gotMinbatchtimeout Type %v, want Type %v.", gotData[8], tt.wantMinbatchtimeout, reflect.TypeOf(gotData[8]), reflect.TypeOf(tt.wantMinbatchtimeout))
+				}
 			}
 
 		})
@@ -607,18 +639,18 @@ func TestCommand_ModelDel(t *testing.T) {
 
 	data, err := ioutil.ReadFile("./../tests/test_data/creditcardfraud.pb")
 	if err != nil {
-		t.Errorf("Error preparing for ModelDel(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for ModelDel(), while issuing ModelStore. error = %v", err)
 		return
 	}
 	simpleClient := createTestClient()
-	err = simpleClient.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
+	err = simpleClient.ModelStore(keyModel1, BackendTF, DeviceCPU, "", 0, 0, 0, []string{"transaction", "reference"}, []string{"output"}, data)
 	if err != nil {
-		t.Errorf("Error preparing for ModelDel(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for ModelDel(), while issuing MoModelStoredelSet. error = %v", err)
 		return
 	}
-	err = simpleClient.ModelSet(keyModel2, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
+	err = simpleClient.ModelStore(keyModel2, BackendTF, DeviceCPU, "", 0, 0, 0, []string{"transaction", "reference"}, []string{"output"}, data)
 	if err != nil {
-		t.Errorf("Error preparing for ModelDel(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for ModelDel(), while issuing ModelStore. error = %v", err)
 		return
 	}
 	type args struct {
@@ -645,37 +677,30 @@ func TestCommand_ModelDel(t *testing.T) {
 
 func TestCommand_ModelExecute(t *testing.T) {
 	// test ModelRun, ModelExecute and ModelExecuteWithTimeout
-	keyModel1 := "test:ModelExecute:1"
-	keyModel2 := "test:ModelExecute:2:Pipelined"
-	keyTransaction1 := "test:ModelExecute:transaction:1"
-	keyReference1 := "test:ModelExecute:reference:1"
-	keyOutput1 := "test:ModelExecute:output:1"
+	keyModel := "test:ModelExecute:1"
+	keyTransaction := "test:ModelExecute:transaction:1"
+	keyReference := "test:ModelExecute:reference:1"
+	keyOutput := "test:ModelExecute:output:1"
 
 	// preparing for execution
 	data, err := ioutil.ReadFile("./../tests/test_data/creditcardfraud.pb")
 	if err != nil {
-		t.Errorf("Error preparing for ModelExecute(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for ModelExecute(), while issuing ModelStore. error = %v", err)
 		return
 	}
 	simpleClient := Connect("", createPool())
-	err = simpleClient.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
+	err = simpleClient.ModelStore(keyModel, BackendTF, DeviceCPU, "", 0, 0, 0, []string{"transaction", "reference"}, []string{"output"}, data)
 	if err != nil {
-		t.Errorf("Error preparing for ModelExecute(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for ModelExecute(), while issuing ModelStore. error = %v", err)
 		return
 	}
 
-	err = simpleClient.ModelSet(keyModel2, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
-	if err != nil {
-		t.Errorf("Error preparing for ModelExecute(), while issuing ModelSet. error = %v", err)
-		return
-	}
-
-	errortset := simpleClient.TensorSet(keyTransaction1, TypeFloat, []int64{1, 30}, nil)
+	errortset := simpleClient.TensorSet(keyTransaction, TypeFloat, []int64{1, 30}, nil)
 	if errortset != nil {
 		t.Error(errortset)
 	}
 
-	errortsetReference := simpleClient.TensorSet(keyReference1, TypeFloat, []int64{256}, nil)
+	errortsetReference := simpleClient.TensorSet(keyReference, TypeFloat, []int64{256}, nil)
 	if errortsetReference != nil {
 		t.Error(errortsetReference)
 	}
@@ -692,10 +717,12 @@ func TestCommand_ModelExecute(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"Model1", args{keyModel1, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 0}, false},
-		{"Model2", args{keyModel2, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 0}, false},
-		{"Model2-with-timeout", args{keyModel2, []string{keyTransaction1, keyReference1}, []string{keyOutput1}, 3}, false},
-		{"WrongInput", args{keyModel1, []string{keyTransaction1}, []string{keyOutput1}, 0}, true},
+		// Run basic model after the model was stored
+		{"Model-basecase", args{keyModel, []string{keyTransaction, keyReference}, []string{keyOutput}, 0}, false},
+		// Run the same model with timeout
+		{"Model-withtimeout", args{keyModel, []string{keyTransaction, keyReference}, []string{keyOutput}, 300}, false},
+		// Run the same model with wrong inputs
+		{"Model-wronginput", args{keyModel, []string{keyTransaction}, []string{keyOutput}, 0}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -979,10 +1006,15 @@ func TestCommand_ScriptStore(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
+		// send nil as entryPoints parameter - fails
 		{"no-entrypoints", args{keyScriptError, DeviceCPU, scriptBin, nil, tag}, true},
+		// send empty array as entryPoints parameter - fails
 		{"no-entrypoints", args{keyScriptError, DeviceCPU, scriptBin, []string{}, tag}, true},
+		// send non existing function name as entryPoints parameter - fails
 		{"non-existing-entrypoint", args{keyScriptError, DeviceCPU, scriptBin, []string{"foo"}, tag}, true},
+		// send function name as entryPoints parameter
 		{"existing-entrypoint", args{keyScriptError, DeviceCPU, script, []string{"bar"}, ""}, false},
+		// use GPU and get an missing cuda error
 		{"missing-cuda", args{keyScriptError, DeviceGPU, script, []string{"bar"}, ""}, true},
 	}
 	for _, tt := range tests {
@@ -1008,10 +1040,10 @@ func TestCommand_ScriptStoreFromInteface_Flow(t *testing.T) {
 	scriptInteface := implementations.NewScript(DeviceCPU)
 	scriptInteface.SetSource(script)
 	scriptInteface.SetEntryPoints([]string{"bar", "bar_variadic"})
-	err := client.ScriptStoreFromInteface("myscript", scriptInteface)
+	err := client.ScriptStoreFromInterface("myscript", scriptInteface)
 	assert.Nil(t, err)
 	scriptInteface.SetTag("{1}")
-	err = client.ScriptStoreFromInteface("mynewscript", scriptInteface)
+	err = client.ScriptStoreFromInterface("mynewscript", scriptInteface)
 	assert.Nil(t, err)
 	scriptInteface1 := implementations.NewEmptyScript()
 	err = client.ScriptGetToInterface("mynewscript", scriptInteface1)
@@ -1114,12 +1146,12 @@ func TestCommand_Info(t *testing.T) {
 	keyModel1 := "test:Info:1"
 	data, err := ioutil.ReadFile("./../tests/test_data/graph.pb")
 	if err != nil {
-		t.Errorf("Error preparing for Info(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for Info(), while issuing ModelStore. error = %v", err)
 		return
 	}
-	err = c.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"a", "b"}, []string{"mul"})
+	err = c.ModelStore(keyModel1, BackendTF, DeviceCPU, "", 0, 0, 0, []string{"a", "b"}, []string{"mul"}, data)
 	if err != nil {
-		t.Errorf("Error preparing for Info(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for Info(), while issuing ModelStore. error = %v", err)
 		return
 	}
 
@@ -1158,10 +1190,10 @@ func TestCommand_DagRun(t *testing.T) {
 	keyModel1 := "test:DagRun:mymodel:1"
 	data, err := ioutil.ReadFile("./../tests/test_data/graph.pb")
 	if err != nil {
-		t.Errorf("Error preparing for Info(), while issuing ModelSet. error = %v", err)
+		t.Errorf("Error preparing for Info(), while issuing ModelStore. error = %v", err)
 		return
 	}
-	err = c.ModelSet(keyModel1, BackendTF, DeviceCPU, data, []string{"a", "b"}, []string{"mul"})
+	err = c.ModelStore(keyModel1, BackendTF, DeviceCPU, "", 0, 0, 0, []string{"a", "b"}, []string{"mul"}, data)
 	assert.Nil(t, err)
 	err = c.TensorSet("persisted_tensor_1", TypeFloat32, []int64{1, 2}, []float32{5, 10})
 	assert.Nil(t, err)

@@ -83,28 +83,37 @@ func (c *Client) TensorGetBlob(name string) (dt string, shape []int64, data []by
 
 // ModelSet sets a RedisAI model from a blob
 func (c *Client) ModelSet(keyName, backend, device string, data []byte, inputs, outputs []string) (err error) {
-	args := modelStoreFlatArgs(keyName, backend, device, "", 0, 0, 0, inputs, outputs, data)
+	args, _ := modelStoreFlatArgs(keyName, backend, device, "", 0, 0, 0, inputs, outputs, data)
 	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
 	return
 }
 
 // ModelSet sets a RedisAI model from a structure that implements the ModelInterface
 func (c *Client) ModelSetFromModel(keyName string, model ModelInterface) (err error) {
-	args := modelStoreInterfaceArgs(keyName, model)
+	args, err := modelStoreInterfaceArgs(keyName, model)
+	if err != nil {
+		return
+	}
 	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
 	return
 }
 
 // ModelStore sets a RedisAI model from a blob
 func (c *Client) ModelStore(keyName, backend, device, tag string, batchsize, minbatchsize, minbatchtimeout int64, inputs, outputs []string, data []byte) (err error) {
-	args := modelStoreFlatArgs(keyName, backend, device, tag, batchsize, minbatchsize, minbatchtimeout, inputs, outputs, data)
+	args, err := modelStoreFlatArgs(keyName, backend, device, tag, batchsize, minbatchsize, minbatchtimeout, inputs, outputs, data)
+	if err != nil {
+		return
+	}
 	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
 	return
 }
 
 // ModelStoreFromModel sets a RedisAI model from a structure that implements the ModelInterface
 func (c *Client) ModelStoreFromModel(keyName string, model ModelInterface) (err error) {
-	args := modelStoreInterfaceArgs(keyName, model)
+	args, err := modelStoreInterfaceArgs(keyName, model)
+	if err != nil {
+		return
+	}
 	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
 	return
 }
@@ -119,15 +128,16 @@ func (c *Client) ModelStoreFromModel(keyName string, model ModelInterface) (err 
 //    - position 5 the minimum size of any batch of incoming requests.
 //    - position 6 array reply with one or more names of the model's input nodes (applicable only for TensorFlow models).
 //    - position 7 array reply with one or more names of the model's output nodes (applicable only for TensorFlow models).
+//    - position 8 the time in milliseconds for which the engine will wait before executing a request to run the model.
 func (c *Client) ModelGet(keyName string) (data []interface{}, err error) {
 	var reply interface{}
-	data = make([]interface{}, 8)
+	data = make([]interface{}, 9)
 	args := modelGetFlatArgs(keyName)
 	reply, err = c.DoOrSend("AI.MODELGET", args, nil)
 	if err != nil || reply == nil {
 		return
 	}
-	data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], err = modelGetParseReply(reply)
+	data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], err = modelGetParseReply(reply)
 	return
 }
 
@@ -206,7 +216,7 @@ func (c *Client) ScriptStoreWithTag(name, device, scriptSource string, entryPoin
 }
 
 // ScriptStoreFromInteface store a TorchScript as the value from a structure that implements the ScriptInterface
-func (c *Client) ScriptStoreFromInteface(keyName string, script ScriptInterface) (err error) {
+func (c *Client) ScriptStoreFromInterface(keyName string, script ScriptInterface) (err error) {
 	args := scriptStoreInterfaceArgs(keyName, script)
 	_, err = c.DoOrSend("AI.SCRIPTSTORE", args, nil)
 	return
