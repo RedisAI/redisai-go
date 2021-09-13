@@ -487,8 +487,8 @@ func TestCommand_ModelSet(t *testing.T) {
 
 func TestCommand_ModelStore(t *testing.T) {
 
-	keyModelStore1 := "test:ModelStore:1"
-	keyModelStore1Pipelined := "test:ModelStore:2:Pipelined"
+	keyModelStore := "test:ModelStore:1"
+	keyModelStorePipelined := "test:ModelStore:2:Pipelined"
 	keyModelStoreUnexistant := "test:ModelStore:3:Unexistant"
 	dataUnexistant := []byte{}
 	data, err := ioutil.ReadFile("./../tests/test_data/creditcardfraud.pb")
@@ -514,10 +514,18 @@ func TestCommand_ModelStore(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{keyModelStore1, args{keyModelStore1, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
-		{keyModelStore1Pipelined, args{keyModelStore1, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
-		{keyModelStore1Pipelined, args{keyModelStore1, BackendTF, DeviceCPU, "", 1, 1, 1, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelStore, args{keyModelStore, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelStorePipelined, args{keyModelStore, BackendTF, DeviceCPU, "", 0, 0, 0, data, []string{"transaction", "reference"}, []string{"output"}}, false},
+		{keyModelStorePipelined, args{keyModelStore, BackendTF, DeviceCPU, "", 1, 1, 1, data, []string{"transaction", "reference"}, []string{"output"}}, false},
 		{keyModelStoreUnexistant, args{keyModelStoreUnexistant, BackendTF, DeviceCPU, "", 0, 0, 0, dataUnexistant, []string{"transaction", "reference"}, []string{"output"}}, true},
+		// use minbatchsize without batchsize
+		{"wrong-args-1", args{keyModelStore, BackendTF, DeviceCPU, "", 0, 1, 0, data, []string{"transaction", "reference"}, []string{"output"}}, true},
+		// use minbatchsize and minbatchtimeout without batchsize
+		{"wrong-args-2", args{keyModelStore, BackendTF, DeviceCPU, "", 0, 1, 1, data, []string{"transaction", "reference"}, []string{"output"}}, true},
+		// use minbatchtimeout without batchsize and without minbatchsize
+		{"wrong-args-3", args{keyModelStore, BackendTF, DeviceCPU, "", 0, 0, 1, data, []string{"transaction", "reference"}, []string{"output"}}, true},
+		// use minbatchtimeout without batchsize
+		{"wrong-args-4", args{keyModelStore, BackendTF, DeviceCPU, "", 1, 0, 1, data, []string{"transaction", "reference"}, []string{"output"}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -547,20 +555,21 @@ func TestCommand_ModelGet(t *testing.T) {
 		name string
 	}
 	tests := []struct {
-		name             string
-		args             args
-		wantBackend      string
-		wantDevice       string
-		wantTag          string
-		wantData         []byte
-		wantBatchsize    int64
-		wantMinbatchsize int64
-		wantInputs       []string
-		wantOutputs      []string
-		wantErr          bool
+		name                string
+		args                args
+		wantBackend         string
+		wantDevice          string
+		wantTag             string
+		wantData            []byte
+		wantBatchsize       int64
+		wantMinbatchsize    int64
+		wantMinbatchtimeout int64
+		wantInputs          []string
+		wantOutputs         []string
+		wantErr             bool
 	}{
-		{keyModelUnexistent1, args{keyModelUnexistent1}, BackendTF, DeviceCPU, "", data, 0, 0, nil, nil, true},
-		{keyModel1, args{keyModel1}, BackendTF, DeviceCPU, "", data, 0, 0, []string{"transaction", "reference"}, []string{"output"}, false},
+		{keyModelUnexistent1, args{keyModelUnexistent1}, BackendTF, DeviceCPU, "", data, 0, 0, 0, nil, nil, true},
+		{keyModel1, args{keyModel1}, BackendTF, DeviceCPU, "", data, 0, 0, 0, []string{"transaction", "reference"}, []string{"output"}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -594,6 +603,9 @@ func TestCommand_ModelGet(t *testing.T) {
 				}
 				if !reflect.DeepEqual(gotData[7], tt.wantOutputs) {
 					t.Errorf("ModelGet() gotOutputs = %v, want %v. gotOutputs Type %v, want Type %v.", gotData[7], tt.wantOutputs, reflect.TypeOf(gotData[7]), reflect.TypeOf(tt.wantOutputs))
+				}
+				if !reflect.DeepEqual(gotData[8], tt.wantMinbatchtimeout) {
+					t.Errorf("ModelGet() gotMinbatchtimeout = %v, want %v. gotMinbatchtimeout Type %v, want Type %v.", gotData[8], tt.wantMinbatchtimeout, reflect.TypeOf(gotData[8]), reflect.TypeOf(tt.wantMinbatchtimeout))
 				}
 			}
 
@@ -657,7 +669,7 @@ func TestCommand_ModelExecute(t *testing.T) {
 		return
 	}
 	simpleClient := Connect("", createPool())
-	err = simpleClient.ModelSet(keyModel, BackendTF, DeviceCPU, data, []string{"transaction", "reference"}, []string{"output"})
+	err = simpleClient.ModelStore(keyModel, BackendTF, DeviceCPU, "", 0, 0, 0, []string{"transaction", "reference"}, []string{"output"}, data)
 	if err != nil {
 		t.Errorf("Error preparing for ModelExecute(), while issuing ModelSet. error = %v", err)
 		return
@@ -685,8 +697,11 @@ func TestCommand_ModelExecute(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
+		// Run basic model after the model was stored
 		{"Model-basecase", args{keyModel, []string{keyTransaction, keyReference}, []string{keyOutput}, 0}, false},
+		// Run the same model with timeout
 		{"Model-withtimeout", args{keyModel, []string{keyTransaction, keyReference}, []string{keyOutput}, 300}, false},
+		// Run the same model with wrong inputs
 		{"Model-wronginput", args{keyModel, []string{keyTransaction}, []string{keyOutput}, 0}, true},
 	}
 	for _, tt := range tests {
