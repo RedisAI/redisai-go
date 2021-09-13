@@ -530,7 +530,24 @@ func TestCommand_ModelStore(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := createTestClient()
+
+			// test ModelStore
 			if err := c.ModelStore(tt.args.name, tt.args.backend, tt.args.device, tt.args.tag, tt.args.batchsize, tt.args.minbatchsize, tt.args.minbatchtimeout, tt.args.inputs, tt.args.outputs, tt.args.data); (err != nil) != tt.wantErr {
+				t.Errorf("ModelStore() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			// test ModelStoreFromModel
+			model := implementations.NewEmptyModel()
+			model.SetBackend(tt.args.backend)
+			model.SetDevice(tt.args.device)
+			model.SetTag(tt.args.tag)
+			model.SetBatchSize(tt.args.batchsize)
+			model.SetMinBatchSize(tt.args.minbatchsize)
+			model.SetMinBatchTimeout(tt.args.minbatchtimeout)
+			model.SetInputs(tt.args.inputs)
+			model.SetOutputs(tt.args.outputs)
+			model.SetBlob(tt.args.data)
+			if err := c.ModelStoreFromModel(tt.args.name, model); (err != nil) != tt.wantErr {
 				t.Errorf("ModelStore() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
