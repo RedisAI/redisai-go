@@ -536,7 +536,7 @@ func TestCommand_ModelStore(t *testing.T) {
 				t.Errorf("ModelStore() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			// test ModelStoreFromModel
+			// test ModelStoreFromModel and ModelSetFromModel
 			model := implementations.NewEmptyModel()
 			model.SetBackend(tt.args.backend)
 			model.SetDevice(tt.args.device)
@@ -548,6 +548,9 @@ func TestCommand_ModelStore(t *testing.T) {
 			model.SetOutputs(tt.args.outputs)
 			model.SetBlob(tt.args.data)
 			if err := c.ModelStoreFromModel(tt.args.name, model); (err != nil) != tt.wantErr {
+				t.Errorf("ModelStore() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if err := c.ModelSetFromModel(tt.args.name, model); (err != nil) != tt.wantErr {
 				t.Errorf("ModelStore() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
