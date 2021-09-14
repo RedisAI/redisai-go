@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func getConnectionDetails() (host string, password string) {
+func getConnectionDetails() (host, password string) {
 	value, exists := os.LookupEnv("REDISAI_TEST_HOST")
 	host = "redis://127.0.0.1:6379"
 	password = ""
@@ -32,7 +32,7 @@ func createPool() *redis.Pool {
 	return cpool
 }
 
-func getTLSdetails() (tlsready bool, tls_cert string, tls_key string, tls_cacert string) {
+func getTLSdetails() (tlsready bool, tls_cert, tls_key, tls_cacert string) {
 	tlsready = false
 	value, exists := os.LookupEnv("TLS_CERT")
 	if exists && value != "" {
@@ -184,7 +184,7 @@ func TestClient_Pipeline(t *testing.T) {
 					t.Errorf("PipelinePos was incorrect, got: %d, want: %d.", c.PipelinePos, oldPos+1)
 				}
 			}
-			if 0 != c.PipelinePos {
+			if c.PipelinePos != 0 {
 				t.Errorf("PipelinePos was incorrect, got: %d, want: %d.", c.PipelinePos, 0)
 			}
 			c.Close()
@@ -262,7 +262,7 @@ func TestClient_DisablePipeline(t *testing.T) {
 	if err != nil {
 		t.Errorf("Receive() error = %v", err)
 	}
-	err, _, _, _ = ProcessTensorGetReply(client.Receive())
+	_, _, _, err = ProcessTensorGetReply(client.Receive())
 	if err != nil {
 		t.Errorf("ProcessTensorGetReply() error = %v", err)
 	}

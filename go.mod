@@ -9,7 +9,7 @@ require (
 	github.com/golangci/go-tools v0.0.0-20190318055746-e32c54105b7c // indirect
 	github.com/golangci/goconst v0.0.0-20180610141641-041c5f2b40f3 // indirect
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
-	github.com/golangci/golangci-lint v1.42.0 // indirect
+	github.com/golangci/golangci-lint v1.42.1 // indirect
 	github.com/golangci/ineffassign v0.0.0-20190609212857-42439a7714cc // indirect
 	github.com/golangci/prealloc v0.0.0-20180630174525-215b22d4de21 // indirect
 	github.com/gomodule/redigo v1.8.2

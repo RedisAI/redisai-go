@@ -133,7 +133,7 @@ func ExampleConnect_ssl() {
 	fmt.Println(fooTensorValues)
 }
 
-func getConnectionDetails() (host string, password string) {
+func getConnectionDetails() (host, password string) {
 	value, exists := os.LookupEnv("REDISAI_TEST_HOST")
 	host = "localhost:6379"
 	password = ""
@@ -147,7 +147,7 @@ func getConnectionDetails() (host string, password string) {
 	return
 }
 
-func getTLSdetails() (tlsready bool, tls_cert string, tls_key string, tls_cacert string) {
+func getTLSdetails() (tlsready bool, tls_cert, tls_key, tls_cacert string) {
 	tlsready = false
 	value, exists := os.LookupEnv("TLS_CERT")
 	if exists && value != "" {

@@ -1,6 +1,8 @@
 package redisai
 
 import (
+	"errors"
+
 	"github.com/gomodule/redigo/redis"
 )
 
@@ -27,23 +29,29 @@ type ModelInterface interface {
 	SetMinBatchTimeout(minBatchSize int64)
 }
 
-func modelStoreInterfaceArgs(keyName string, modelInterface ModelInterface) redis.Args {
+func modelStoreInterfaceArgs(keyName string, modelInterface ModelInterface) (redis.Args, error) {
 	return modelStoreFlatArgs(keyName, modelInterface.Backend(), modelInterface.Device(), modelInterface.Tag(), modelInterface.BatchSize(), modelInterface.MinBatchSize(), modelInterface.MinBatchTimeout(), modelInterface.Inputs(), modelInterface.Outputs(), modelInterface.Blob())
 }
 
-func modelStoreFlatArgs(keyName, backend, device, tag string, batchsize, minbatchsize, minbatchtimeout int64, inputs, outputs []string, blob []byte) redis.Args {
+func modelStoreFlatArgs(keyName, backend, device, tag string, batchsize, minbatchsize, minbatchtimeout int64, inputs, outputs []string, blob []byte) (redis.Args, error) {
 	args := redis.Args{}.Add(keyName, backend, device)
 	if len(tag) > 0 {
 		args = args.Add("TAG", tag)
 	}
 	if batchsize > 0 {
 		args = args.Add("BATCHSIZE", batchsize)
-		if minbatchsize > 0 {
-			args = args.Add("MINBATCHSIZE", minbatchsize)
-			if minbatchtimeout > 0 {
-				args = args.Add("MINBATCHTIMEOUT", minbatchtimeout)
-			}
+	}
+	if minbatchsize > 0 {
+		if batchsize <= 0 {
+			return nil, errors.New("`minbatchsize` can't be provided without `batchsize`")
 		}
+		args = args.Add("MINBATCHSIZE", minbatchsize)
+	}
+	if minbatchtimeout > 0 {
+		if batchsize <= 0 || minbatchsize <= 0 {
+			return nil, errors.New("`minbatchtimeout` can't be provided without `batchsize` and `minbatchsize`")
+		}
+		args = args.Add("MINBATCHTIMEOUT", minbatchtimeout)
 	}
 	if len(inputs) > 0 {
 		args = args.Add("INPUTS").Add(len(inputs)).AddFlat(inputs)
@@ -53,7 +61,7 @@ func modelStoreFlatArgs(keyName, backend, device, tag string, batchsize, minbatc
 	}
 	args = args.Add("BLOB")
 	args = args.Add(blob)
-	return args
+	return args, nil
 }
 
 func modelRunFlatArgs(name string, inputTensorNames, outputTensorNames []string) redis.Args {
@@ -67,8 +75,22 @@ func modelRunFlatArgs(name string, inputTensorNames, outputTensorNames []string)
 	return args
 }
 
+func modelExecuteFlatArgs(name string, inputTensorNames, outputTensorNames []string, timeout int64) redis.Args {
+	args := redis.Args{name}
+	if len(inputTensorNames) > 0 {
+		args = args.Add("INPUTS").Add(len(inputTensorNames)).AddFlat(inputTensorNames)
+	}
+	if len(outputTensorNames) > 0 {
+		args = args.Add("OUTPUTS").Add(len(outputTensorNames)).AddFlat(outputTensorNames)
+	}
+	if timeout > 0 {
+		args = args.Add("TIMEOUT").Add(timeout)
+	}
+	return args
+}
+
 func modelGetParseToInterface(reply interface{}, model ModelInterface) (err error) {
-	backend, device, tag, blob, batchsize, minbatchsize, inputs, outputs, err := modelGetParseReply(reply)
+	backend, device, tag, blob, batchsize, minbatchsize, inputs, outputs, minbatchtimeout, err := modelGetParseReply(reply)
 	if err != nil {
 		return err
 	}
@@ -78,12 +100,13 @@ func modelGetParseToInterface(reply interface{}, model ModelInterface) (err erro
 	model.SetBlob(blob)
 	model.SetBatchSize(batchsize)
 	model.SetMinBatchSize(minbatchsize)
+	model.SetMinBatchTimeout(minbatchtimeout)
 	model.SetInputs(inputs)
 	model.SetOutputs(outputs)
 	return
 }
 
-func modelGetParseReply(reply interface{}) (backend string, device string, tag string, blob []byte, batchsize int64, minbatchsize int64, inputs []string, outputs []string, err error) {
+func modelGetParseReply(reply interface{}) (backend, device, tag string, blob []byte, batchsize, minbatchsize int64, inputs, outputs []string, minbatchtimeout int64, err error) {
 	var replySlice []interface{}
 	var key string
 	inputs = nil
@@ -114,6 +137,8 @@ func modelGetParseReply(reply interface{}) (backend string, device string, tag s
 			batchsize, err = redis.Int64(replySlice[pos+1], err)
 		case "minbatchsize":
 			minbatchsize, err = redis.Int64(replySlice[pos+1], err)
+		case "minbatchtimeout":
+			minbatchtimeout, err = redis.Int64(replySlice[pos+1], err)
 		case "inputs":
 			// we need to create a temporary slice given redis.Strings creates by default a slice with capacity of the input slice even if it can't be parsed
 			// so the solution is to only use the replied slice of redis.Strings in case of success. Otherwise you can have inputs filled with []string(nil)

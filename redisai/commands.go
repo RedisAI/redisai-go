@@ -29,7 +29,7 @@ func (c *Client) TensorGet(name, format string) (data []interface{}, err error) 
 	if err != nil || reply == nil {
 		return
 	}
-	err, data[0], data[1], data[2] = ProcessTensorGetReply(reply, err)
+	data[0], data[1], data[2], err = ProcessTensorGetReply(reply, err)
 	return
 }
 
@@ -52,7 +52,7 @@ func (c *Client) TensorGetValues(name string) (dt string, shape []int64, data in
 	if err != nil || reply == nil {
 		return
 	}
-	err, dt, shape, data = ProcessTensorGetReply(reply, err)
+	dt, shape, data, err = ProcessTensorGetReply(reply, err)
 	return
 }
 
@@ -64,7 +64,7 @@ func (c *Client) TensorGetMeta(name string) (dt string, shape []int64, err error
 	if err != nil || reply == nil {
 		return
 	}
-	err, dt, shape, _ = ProcessTensorGetReply(reply, err)
+	dt, shape, _, err = ProcessTensorGetReply(reply, err)
 	return
 }
 
@@ -76,35 +76,44 @@ func (c *Client) TensorGetBlob(name string) (dt string, shape []int64, data []by
 	if err != nil || reply == nil {
 		return
 	}
-	err, dt, shape, dataInterface := ProcessTensorGetReply(reply, err)
+	dt, shape, dataInterface, err := ProcessTensorGetReply(reply, err)
 	data = dataInterface.([]byte)
 	return
 }
 
 // ModelSet sets a RedisAI model from a blob
 func (c *Client) ModelSet(keyName, backend, device string, data []byte, inputs, outputs []string) (err error) {
-	args := modelStoreFlatArgs(keyName, backend, device, "", 0, 0, 0, inputs, outputs, data)
+	args, _ := modelStoreFlatArgs(keyName, backend, device, "", 0, 0, 0, inputs, outputs, data)
 	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
 	return
 }
 
 // ModelSet sets a RedisAI model from a structure that implements the ModelInterface
 func (c *Client) ModelSetFromModel(keyName string, model ModelInterface) (err error) {
-	args := modelStoreInterfaceArgs(keyName, model)
+	args, err := modelStoreInterfaceArgs(keyName, model)
+	if err != nil {
+		return
+	}
 	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
 	return
 }
 
 // ModelStore sets a RedisAI model from a blob
 func (c *Client) ModelStore(keyName, backend, device, tag string, batchsize, minbatchsize, minbatchtimeout int64, inputs, outputs []string, data []byte) (err error) {
-	args := modelStoreFlatArgs(keyName, backend, device, tag, batchsize, minbatchsize, minbatchtimeout, inputs, outputs, data)
+	args, err := modelStoreFlatArgs(keyName, backend, device, tag, batchsize, minbatchsize, minbatchtimeout, inputs, outputs, data)
+	if err != nil {
+		return
+	}
 	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
 	return
 }
 
 // ModelStoreFromModel sets a RedisAI model from a structure that implements the ModelInterface
 func (c *Client) ModelStoreFromModel(keyName string, model ModelInterface) (err error) {
-	args := modelStoreInterfaceArgs(keyName, model)
+	args, err := modelStoreInterfaceArgs(keyName, model)
+	if err != nil {
+		return
+	}
 	_, err = c.DoOrSend("AI.MODELSTORE", args, nil)
 	return
 }
@@ -119,15 +128,16 @@ func (c *Client) ModelStoreFromModel(keyName string, model ModelInterface) (err 
 //    - position 5 the minimum size of any batch of incoming requests.
 //    - position 6 array reply with one or more names of the model's input nodes (applicable only for TensorFlow models).
 //    - position 7 array reply with one or more names of the model's output nodes (applicable only for TensorFlow models).
+//    - position 8 the time in milliseconds for which the engine will wait before executing a request to run the model.
 func (c *Client) ModelGet(keyName string) (data []interface{}, err error) {
 	var reply interface{}
-	data = make([]interface{}, 8)
+	data = make([]interface{}, 9)
 	args := modelGetFlatArgs(keyName)
 	reply, err = c.DoOrSend("AI.MODELGET", args, nil)
 	if err != nil || reply == nil {
 		return
 	}
-	data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], err = modelGetParseReply(reply)
+	data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], err = modelGetParseReply(reply)
 	return
 }
 
@@ -150,9 +160,23 @@ func (c *Client) ModelDel(keyName string) (err error) {
 }
 
 // ModelRun runs the model present in the keyName, with the input tensor names, and output tensor names
-func (c *Client) ModelRun(name string, inputTensorNames, outputTensorNames []string) (err error) {
-	args := modelRunFlatArgs(name, inputTensorNames, outputTensorNames)
-	_, err = c.DoOrSend("AI.MODELRUN", args, nil)
+func (c *Client) ModelRun(name string, inputs, outputs []string) (err error) {
+	args := modelExecuteFlatArgs(name, inputs, outputs, 0)
+	_, err = c.DoOrSend("AI.MODELEXECUTE", args, nil)
+	return
+}
+
+// ModelExecute runs the model present in the keyName, with the input tensor names, and output tensor names
+func (c *Client) ModelExecute(name string, inputs, outputs []string) (err error) {
+	args := modelExecuteFlatArgs(name, inputs, outputs, 0)
+	_, err = c.DoOrSend("AI.MODELEXECUTE", args, nil)
+	return
+}
+
+// ModelExecuteWithTimeout runs the model present in the keyName, with the input tensor names, output tensor names and timeout
+func (c *Client) ModelExecuteWithTimeout(name string, inputs, outputs []string, timeout int64) (err error) {
+	args := modelExecuteFlatArgs(name, inputs, outputs, timeout)
+	_, err = c.DoOrSend("AI.MODELEXECUTE", args, nil)
 	return
 }
 
@@ -234,13 +258,27 @@ func (c *Client) ScriptDel(name string) (err error) {
 }
 
 // ScriptRun runs a RedisAI script
-func (c *Client) ScriptRun(name string, fn string, inputs []string, outputs []string) (err error) {
+func (c *Client) ScriptRun(name, fn string, inputs, outputs []string) (err error) {
 	args := scriptRunFlatArgs(name, fn, inputs, outputs)
 	_, err = c.DoOrSend("AI.SCRIPTRUN", args, nil)
 	return
 }
 
-func (c *Client) LoadBackend(backend_identifier string, location string) (err error) {
+// ScriptExecute run an already set script
+func (c *Client) ScriptExecute(name, fn string, keys, inputs, inputArgs, outputs []string) (err error) {
+	args := scriptExecuteFlatArgs(name, fn, keys, inputs, inputArgs, outputs, 0)
+	_, err = c.DoOrSend("AI.SCRIPTEXECUTE", args, nil)
+	return
+}
+
+// ScriptExecuteWithTimeout run an already set script with timeout limitation
+func (c *Client) ScriptExecuteWithTimeout(name, fn string, keys, inputs, inputArgs, outputs []string, timeout int64) (err error) {
+	args := scriptExecuteFlatArgs(name, fn, keys, inputs, inputArgs, outputs, timeout)
+	_, err = c.DoOrSend("AI.SCRIPTEXECUTE", args, nil)
+	return
+}
+
+func (c *Client) LoadBackend(backend_identifier, location string) (err error) {
 	args := redis.Args{}.Add("LOADBACKEND").Add(backend_identifier).Add(location)
 	_, err = c.DoOrSend("AI.CONFIG", args, nil)
 	return
@@ -278,7 +316,7 @@ func (c *Client) ResetStat(key string) (string, error) {
 }
 
 // Direct acyclic graph of operations to run within RedisAI
-func (c *Client) DagRun(loadKeys []string, persistKeys []string, dagCommandInterface DagCommandInterface) ([]interface{}, error) {
+func (c *Client) DagRun(loadKeys, persistKeys []string, dagCommandInterface DagCommandInterface) ([]interface{}, error) {
 	commandArgs, err := dagCommandInterface.FlatArgs()
 	if err != nil {
 		return nil, err
@@ -300,7 +338,7 @@ func (c *Client) DagRunRO(loadKeys []string, dagCommandInterface DagCommandInter
 }
 
 // AddDagRunArgs for AI.DAGRUN and DAGRUN_RO commands.
-func AddDagRunArgs(loadKeys []string, persistKeys []string, commandArgs redis.Args) redis.Args {
+func AddDagRunArgs(loadKeys, persistKeys []string, commandArgs redis.Args) redis.Args {
 	args := redis.Args{}
 	if loadKeys != nil {
 		args = args.Add("LOAD", len(loadKeys)).AddFlat(loadKeys)
