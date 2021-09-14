@@ -8,6 +8,8 @@ type DagCommandInterface interface {
 	TensorSet(keyName, dt string, dims []int64, data interface{}) DagCommandInterface
 	TensorGet(name, format string) DagCommandInterface
 	ModelRun(name string, inputTensorNames, outputTensorNames []string) DagCommandInterface
+	ModelExecute(name string, inputs, outputs []string, timeout int64) DagCommandInterface
+	ScriptExecute(name, fn string, inputKeys, inputTensors, inputArgs, outputs []string, timeout int64) DagCommandInterface
 	FlatArgs() (redis.Args, error)
 	ParseReply(reply interface{}, err error) ([]interface{}, error)
 }
@@ -22,6 +24,7 @@ func NewDag() *Dag {
 	}
 }
 
+// TensorSet add TENSORSET command to DagCommandInterface
 func (d *Dag) TensorSet(keyName, dt string, dims []int64, data interface{}) DagCommandInterface {
 	args := redis.Args{"AI.TENSORSET"}
 	setFlatArgs, err := tensorSetFlatArgs(keyName, dt, dims, data)
@@ -32,14 +35,34 @@ func (d *Dag) TensorSet(keyName, dt string, dims []int64, data interface{}) DagC
 	return d
 }
 
+// TensorGet add TENSORGET command to DagCommandInterface
 func (d *Dag) TensorGet(name, format string) DagCommandInterface {
 	d.commands = append(d.commands, redis.Args{"AI.TENSORGET", name, format})
 	return d
 }
 
-func (d *Dag) ModelRun(name string, inputTensorNames, outputTensorNames []string) DagCommandInterface {
+// ModelRun add MODELRUN command to DagCommandInterface
+func (d *Dag) ModelRun(name string, inputs, outputs []string) DagCommandInterface {
 	args := redis.Args{"AI.MODELRUN"}
-	runFlatArgs := modelRunFlatArgs(name, inputTensorNames, outputTensorNames)
+	runFlatArgs := modelRunFlatArgs(name, inputs, outputs)
+	args = args.AddFlat(runFlatArgs)
+	d.commands = append(d.commands, args)
+	return d
+}
+
+// ModelExecute add MODELEXECUTE command to DagCommandInterface
+func (d *Dag) ModelExecute(name string, inputs, outputs []string, timeout int64) DagCommandInterface {
+	args := redis.Args{"AI.MODELEXECUTE"}
+	runFlatArgs := modelExecuteFlatArgs(name, inputs, outputs, timeout)
+	args = args.AddFlat(runFlatArgs)
+	d.commands = append(d.commands, args)
+	return d
+}
+
+// ScriptExecute add SCRIPTEXECUTE command to DagCommandInterface
+func (d *Dag) ScriptExecute(name, fn string, inputKeys, inputTensors, inputArgs, outputs []string, timeout int64) DagCommandInterface {
+	args := redis.Args{"AI.SCRIPTEXECUTE"}
+	runFlatArgs := scriptExecuteFlatArgs(name, fn, inputKeys, inputTensors, inputArgs, outputs, timeout)
 	args = args.AddFlat(runFlatArgs)
 	d.commands = append(d.commands, args)
 	return d
