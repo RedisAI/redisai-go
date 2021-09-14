@@ -104,6 +104,7 @@ func scriptExecuteFlatArgs(name, fn string, inputKeys, inputTensors, inputArgs, 
 	}
 	if len(inputTensors) > 0 {
 		args = args.Add("INPUTS").Add(len(inputTensors)).AddFlat(inputTensors)
+
 	}
 	if len(inputArgs) > 0 {
 		args = args.Add("ARGS").Add(len(inputArgs)).AddFlat(inputArgs)
