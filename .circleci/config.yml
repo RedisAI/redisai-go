@@ -48,7 +48,6 @@ jobs:
       - image: cimg/go:1.18
       - image: redislabs/redisai:edge-cpu-bionic
 
-    working_directory: /go/src/github.com/RedisAI/redisai-go
     steps:
       - checkout
       - run: make get
