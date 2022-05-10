@@ -5,7 +5,7 @@ version: 2
 jobs:
   build-tls:
     docker:
-      - image: circleci/golang:1.16
+      - image: circleci/golang:1.18
     steps:
       - checkout
       - setup_remote_docker
@@ -46,13 +46,12 @@ jobs:
 
   build-edge: # test with redisai:edge-cpu
     docker:
-      - image: circleci/golang:1.16
+      - image: circleci/golang:1.18
       - image: redislabs/redisai:edge-cpu-bionic
 
     working_directory: /go/src/github.com/RedisAI/redisai-go
     steps:
       - checkout
-      - run: make checkfmt
       - run: make get
       - run: make coverage
       - run: bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/master/codecov) -t ${CODECOV_TOKEN}
