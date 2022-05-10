@@ -5,7 +5,7 @@ version: 2
 jobs:
   build-tls:
     docker:
-      - image: circleci/go:1.18
+      - image: cimg/go:1.18
     steps:
       - checkout
       - setup_remote_docker
@@ -46,7 +46,7 @@ jobs:
 
   build-edge: # test with redisai:edge-cpu
     docker:
-      - image: circleci/go:1.18
+      - image: cimg/go:1.18
       - image: redislabs/redisai:edge-cpu-bionic
 
     working_directory: /go/src/github.com/RedisAI/redisai-go
